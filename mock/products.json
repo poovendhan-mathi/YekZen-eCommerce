@@ -1,0 +1,122 @@
+[
+  {
+    "id": "p001",
+    "name": "Wireless Premium Headphones",
+    "price": 129.99,
+    "originalPrice": 179.99,
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+    "rating": 4.8,
+    "reviews": 124,
+    "category": "Audio",
+    "brand": "SoundTech",
+    "description": "Premium wireless headphones with active noise cancellation, 30-hour battery life, and crystal-clear audio quality.",
+    "features": [
+      "Active Noise Cancellation",
+      "30-hour Battery",
+      "Wireless Charging",
+      "Hi-Res Audio"
+    ],
+    "inStock": true,
+    "stockCount": 15
+  },
+  {
+    "id": "p002",
+    "name": "Smartwatch Series 7",
+    "price": 299.0,
+    "originalPrice": 399.0,
+    "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+    "rating": 4.7,
+    "reviews": 89,
+    "category": "Wearables",
+    "brand": "TechTime",
+    "description": "Advanced smartwatch with health monitoring, GPS tracking, and seamless smartphone integration.",
+    "features": [
+      "Health Monitoring",
+      "GPS Tracking",
+      "Water Resistant",
+      "7-day Battery"
+    ],
+    "inStock": true,
+    "stockCount": 8
+  },
+  {
+    "id": "p003",
+    "name": "Laptop Pro 16-inch",
+    "price": 1299.99,
+    "originalPrice": 1599.99,
+    "image": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
+    "rating": 4.9,
+    "reviews": 256,
+    "category": "Computers",
+    "brand": "EliteBook",
+    "description": "High-performance laptop perfect for professionals and creatives with stunning display and powerful processor.",
+    "features": [
+      "16-inch 4K Display",
+      "Intel i7 Processor",
+      "32GB RAM",
+      "1TB SSD"
+    ],
+    "inStock": true,
+    "stockCount": 5
+  },
+  {
+    "id": "p004",
+    "name": "Wireless Gaming Mouse",
+    "price": 79.99,
+    "originalPrice": 99.99,
+    "image": "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400",
+    "rating": 4.6,
+    "reviews": 167,
+    "category": "Gaming",
+    "brand": "GamePro",
+    "description": "Precision wireless gaming mouse with customizable RGB lighting and ultra-fast response time.",
+    "features": [
+      "RGB Lighting",
+      "12000 DPI",
+      "Wireless",
+      "Programmable Buttons"
+    ],
+    "inStock": true,
+    "stockCount": 22
+  },
+  {
+    "id": "p005",
+    "name": "4K Action Camera",
+    "price": 199.99,
+    "originalPrice": 249.99,
+    "image": "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=400",
+    "rating": 4.5,
+    "reviews": 93,
+    "category": "Cameras",
+    "brand": "AdventureCam",
+    "description": "Compact 4K action camera perfect for capturing your adventures with professional-grade stabilization.",
+    "features": [
+      "4K Video",
+      "Image Stabilization",
+      "Waterproof",
+      "Voice Control"
+    ],
+    "inStock": true,
+    "stockCount": 12
+  },
+  {
+    "id": "p006",
+    "name": "Bluetooth Speaker",
+    "price": 49.99,
+    "originalPrice": 69.99,
+    "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400",
+    "rating": 4.4,
+    "reviews": 201,
+    "category": "Audio",
+    "brand": "SoundWave",
+    "description": "Portable Bluetooth speaker with 360-degree sound and impressive bass for any occasion.",
+    "features": [
+      "360° Sound",
+      "12-hour Battery",
+      "Waterproof",
+      "Voice Assistant"
+    ],
+    "inStock": true,
+    "stockCount": 30
+  }
+]
