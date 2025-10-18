@@ -1,8 +1,13 @@
 // Seed script to add sample products to Firestore
 // Run this with: node scripts/seedProducts.js
 
-const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, addDoc, serverTimestamp } = require('firebase/firestore');
+const { initializeApp } = require("firebase/app");
+const {
+  getFirestore,
+  collection,
+  addDoc,
+  serverTimestamp,
+} = require("firebase/firestore");
 
 // Firebase config (ensure your .env.local has all these variables)
 const firebaseConfig = {
@@ -22,7 +27,8 @@ const db = getFirestore(app);
 const sampleProducts = [
   {
     name: "Premium Wireless Headphones",
-    description: "High-quality noise-canceling wireless headphones with 30-hour battery life",
+    description:
+      "High-quality noise-canceling wireless headphones with 30-hour battery life",
     price: 299.99,
     originalPrice: 399.99,
     category: "Electronics",
@@ -37,7 +43,8 @@ const sampleProducts = [
   },
   {
     name: "Smart Fitness Watch",
-    description: "Track your fitness goals with this advanced smartwatch featuring heart rate monitoring",
+    description:
+      "Track your fitness goals with this advanced smartwatch featuring heart rate monitoring",
     price: 199.99,
     originalPrice: 249.99,
     category: "Wearables",
@@ -52,7 +59,8 @@ const sampleProducts = [
   },
   {
     name: "Organic Cotton T-Shirt",
-    description: "Comfortable and sustainable organic cotton t-shirt in multiple colors",
+    description:
+      "Comfortable and sustainable organic cotton t-shirt in multiple colors",
     price: 29.99,
     originalPrice: 39.99,
     category: "Clothing",
@@ -67,7 +75,8 @@ const sampleProducts = [
   },
   {
     name: "Professional Camera Lens",
-    description: "50mm f/1.8 prime lens perfect for portraits and low-light photography",
+    description:
+      "50mm f/1.8 prime lens perfect for portraits and low-light photography",
     price: 449.99,
     originalPrice: 549.99,
     category: "Electronics",
@@ -82,7 +91,8 @@ const sampleProducts = [
   },
   {
     name: "Minimalist Backpack",
-    description: "Sleek and durable backpack with laptop compartment and water-resistant material",
+    description:
+      "Sleek and durable backpack with laptop compartment and water-resistant material",
     price: 79.99,
     originalPrice: 99.99,
     category: "Accessories",
@@ -97,7 +107,8 @@ const sampleProducts = [
   },
   {
     name: "Stainless Steel Water Bottle",
-    description: "Insulated 32oz water bottle keeps drinks cold for 24 hours or hot for 12 hours",
+    description:
+      "Insulated 32oz water bottle keeps drinks cold for 24 hours or hot for 12 hours",
     price: 34.99,
     originalPrice: 44.99,
     category: "Accessories",
@@ -112,7 +123,8 @@ const sampleProducts = [
   },
   {
     name: "Wireless Gaming Mouse",
-    description: "Precision gaming mouse with customizable RGB lighting and 16000 DPI sensor",
+    description:
+      "Precision gaming mouse with customizable RGB lighting and 16000 DPI sensor",
     price: 69.99,
     originalPrice: 89.99,
     category: "Electronics",
@@ -127,7 +139,8 @@ const sampleProducts = [
   },
   {
     name: "Yoga Mat Premium",
-    description: "Extra-thick non-slip yoga mat with carrying strap, perfect for all yoga styles",
+    description:
+      "Extra-thick non-slip yoga mat with carrying strap, perfect for all yoga styles",
     price: 49.99,
     originalPrice: 69.99,
     category: "Sports",
@@ -143,42 +156,46 @@ const sampleProducts = [
 ];
 
 async function seedProducts() {
-  console.log('🌱 Starting to seed products...');
-  
+  console.log("🌱 Starting to seed products...");
+
   try {
-    const productsRef = collection(db, 'products');
-    
+    const productsRef = collection(db, "products");
+
     for (const product of sampleProducts) {
       const productWithTimestamp = {
         ...product,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
-      
+
       const docRef = await addDoc(productsRef, productWithTimestamp);
       console.log(`✅ Added product: ${product.name} (ID: ${docRef.id})`);
     }
-    
+
     console.log(`\n🎉 Successfully seeded ${sampleProducts.length} products!`);
-    console.log('You can now view them in your Firestore console or in your app.');
+    console.log(
+      "You can now view them in your Firestore console or in your app."
+    );
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error seeding products:', error);
+    console.error("❌ Error seeding products:", error);
     process.exit(1);
   }
 }
 
 // Check if Firebase config is set
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error('❌ Firebase configuration is missing!');
-  console.error('Please make sure your .env.local file contains all required Firebase environment variables.');
-  console.error('Required variables:');
-  console.error('  - NEXT_PUBLIC_FIREBASE_API_KEY');
-  console.error('  - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
-  console.error('  - NEXT_PUBLIC_FIREBASE_PROJECT_ID');
-  console.error('  - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET');
-  console.error('  - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID');
-  console.error('  - NEXT_PUBLIC_FIREBASE_APP_ID');
+  console.error("❌ Firebase configuration is missing!");
+  console.error(
+    "Please make sure your .env.local file contains all required Firebase environment variables."
+  );
+  console.error("Required variables:");
+  console.error("  - NEXT_PUBLIC_FIREBASE_API_KEY");
+  console.error("  - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN");
+  console.error("  - NEXT_PUBLIC_FIREBASE_PROJECT_ID");
+  console.error("  - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET");
+  console.error("  - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID");
+  console.error("  - NEXT_PUBLIC_FIREBASE_APP_ID");
   process.exit(1);
 }
 

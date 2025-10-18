@@ -2,16 +2,16 @@
 
 ## 🎯 Summary
 
-| Aspect | Development (Emulator) | Production (Firebase Cloud) |
-|--------|------------------------|------------------------------|
+| Aspect                   | Development (Emulator)                   | Production (Firebase Cloud)               |
+| ------------------------ | ---------------------------------------- | ----------------------------------------- |
 | **Environment Variable** | `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true` | `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=false` |
-| **Database Location** | Your Computer (localhost:8080) | Firebase Cloud |
-| **Command to Start** | `firebase emulators:start` | N/A (always available) |
-| **Seed Command** | `npm run seed:local` | `npm run seed:prod` |
-| **Data Persistence** | Temporary (cleared when stopped) | Permanent |
-| **Cost** | 100% Free | Pay for usage |
-| **Internet Required** | No | Yes |
-| **Access URL** | http://localhost:4000 (Emulator UI) | https://console.firebase.google.com |
+| **Database Location**    | Your Computer (localhost:8080)           | Firebase Cloud                            |
+| **Command to Start**     | `firebase emulators:start`               | N/A (always available)                    |
+| **Seed Command**         | `npm run seed:local`                     | `npm run seed:prod`                       |
+| **Data Persistence**     | Temporary (cleared when stopped)         | Permanent                                 |
+| **Cost**                 | 100% Free                                | Pay for usage                             |
+| **Internet Required**    | No                                       | Yes                                       |
+| **Access URL**           | http://localhost:4000 (Emulator UI)      | https://console.firebase.google.com       |
 
 ## 🔧 Setup Commands
 
@@ -56,6 +56,7 @@ npm start
 ## 📊 When to Use Which
 
 ### Use Development (Emulator) When:
+
 - ✅ Building new features
 - ✅ Testing functionality
 - ✅ Running unit/integration tests
@@ -65,6 +66,7 @@ npm start
 - ✅ Need fast iteration
 
 ### Use Production (Cloud) When:
+
 - ✅ Deploying to users
 - ✅ Need persistent data
 - ✅ Testing real-world performance
@@ -122,12 +124,14 @@ Check your browser console or terminal logs:
 ## 📝 Checklist
 
 ### Before Developing
+
 - [ ] `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true` in `.env.local`
 - [ ] Firebase emulator is running
 - [ ] Local database is seeded
 - [ ] Can see data at http://localhost:4000
 
 ### Before Deploying to Production
+
 - [ ] `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=false` in `.env.production`
 - [ ] Production Firebase project exists
 - [ ] Production database is seeded
@@ -137,7 +141,8 @@ Check your browser console or terminal logs:
 ## 🆘 Common Issues
 
 **Issue**: App shows "No products found"
-**Fix**: 
+**Fix**:
+
 - Development: Run `npm run seed:local`
 - Production: Run `npm run seed:prod`
 

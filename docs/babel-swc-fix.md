@@ -1,18 +1,22 @@
 # Babel/SWC Conflict Resolution
 
 ## Issue
+
 Next.js was showing an error:
+
 ```
 "next/font" requires SWC although Babel is being used due to a custom babel config being present.
 ```
 
 ## Root Cause
+
 - Custom `babel.config.js` file was present in the project root
 - Next.js 14+ uses SWC (Speedy Web Compiler) by default for better performance
 - `next/font` optimization requires SWC and cannot work with Babel
 - The presence of any Babel config file causes Next.js to fall back to Babel
 
 ## Solution
+
 **Removed the custom Babel configuration file** because:
 
 1. **Not needed for tests**: The project uses `next/jest` which automatically handles Babel configuration for Jest testing
@@ -20,10 +24,13 @@ Next.js was showing an error:
 3. **Full compatibility**: SWC supports all the features we need
 
 ### Files Removed
+
 - `babel.config.js` (originally created for Jest, but unnecessary with next/jest)
 
 ### Alternative Approaches (Not Used)
+
 If custom Babel configuration was absolutely necessary, we could have:
+
 1. Removed `next/font` imports and used standard CSS fonts
 2. Created environment-specific Babel config (test-only)
 3. Used Next.js 13 or earlier (not recommended)
@@ -31,15 +38,17 @@ If custom Babel configuration was absolutely necessary, we could have:
 ## Additional Fixes
 
 ### 1. Missing AnimatedTooltip Export
+
 **Issue**: ProductCard.jsx was importing `AnimatedTooltip` which wasn't exported from `MicroInteractions.jsx`
 
 **Solution**: Added the `AnimatedTooltip` component to `MicroInteractions.jsx`:
+
 ```jsx
-export const AnimatedTooltip = ({ 
-  children, 
-  content, 
+export const AnimatedTooltip = ({
+  children,
+  content,
   position = "top",
-  className = "" 
+  className = "",
 }) => {
   // Component implementation with motion animations
   // Supports top, bottom, left, right positioning
@@ -48,9 +57,11 @@ export const AnimatedTooltip = ({
 ```
 
 ### 2. Cart Undefined Error in Header
+
 **Issue**: `cart.items` was throwing "Cannot read properties of undefined"
 
 **Solution**: Added optional chaining and default value:
+
 ```jsx
 // Before:
 const cartItemsCount = cart.items.reduce(
@@ -59,26 +70,28 @@ const cartItemsCount = cart.items.reduce(
 );
 
 // After:
-const cartItemsCount = cart?.items?.reduce(
-  (total, item) => total + item.quantity,
-  0
-) || 0;
+const cartItemsCount =
+  cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
 ```
 
 ## Verification
 
 ### Development Server
+
 ```bash
 npm run dev
 ```
+
 ✅ Server starts successfully without errors
 ✅ No Babel/SWC warnings
 ✅ Font optimization working
 
 ### Tests
+
 ```bash
 npm test
 ```
+
 ✅ Tests run successfully with `next/jest` handling Babel automatically
 
 ## Benefits of the Fix

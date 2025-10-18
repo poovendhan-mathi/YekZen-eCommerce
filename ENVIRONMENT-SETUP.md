@@ -29,11 +29,13 @@ NEXT_PUBLIC_AUTH_EMULATOR_PORT=9099
 **Option A: Manual (Two Terminals)**
 
 Terminal 1 - Start Firebase Emulator:
+
 ```bash
 firebase emulators:start --only firestore,auth
 ```
 
 Terminal 2 - Start Next.js:
+
 ```bash
 npm run dev
 ```
@@ -93,13 +95,13 @@ The app automatically detects which database to use based on `NEXT_PUBLIC_USE_FI
 
 ## 🔧 NPM Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Next.js only |
-| `npm run dev:emulator` | Start Firebase Emulator only |
-| `npm run dev:all` | Start both emulator + Next.js |
-| `npm run seed:local` | Seed local database |
-| `npm run seed:prod` | Seed production database |
+| Command                | Description                   |
+| ---------------------- | ----------------------------- |
+| `npm run dev`          | Start Next.js only            |
+| `npm run dev:emulator` | Start Firebase Emulator only  |
+| `npm run dev:all`      | Start both emulator + Next.js |
+| `npm run seed:local`   | Seed local database           |
+| `npm run seed:prod`    | Seed production database      |
 
 ## 📁 Important Files
 
@@ -111,6 +113,7 @@ The app automatically detects which database to use based on `NEXT_PUBLIC_USE_FI
 ## ✅ Checklist
 
 ### Development Setup
+
 - [ ] Install: `npm install -D concurrently firebase-tools`
 - [ ] Set `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true` in `.env.local`
 - [ ] Run: `firebase emulators:start`
@@ -119,6 +122,7 @@ The app automatically detects which database to use based on `NEXT_PUBLIC_USE_FI
 - [ ] Visit: http://localhost:4000 (emulator UI)
 
 ### Production Setup
+
 - [ ] Create Firebase production project
 - [ ] Create `.env.production` with production credentials
 - [ ] Set `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=false`
@@ -135,7 +139,8 @@ The app automatically detects which database to use based on `NEXT_PUBLIC_USE_FI
 **Solution**: Check environment variable `NEXT_PUBLIC_USE_FIREBASE_EMULATOR` in your `.env` file
 
 **Problem**: Can't install firebase-tools
-**Solution**: 
+**Solution**:
+
 ```bash
 # Install globally instead
 npm install -g firebase-tools

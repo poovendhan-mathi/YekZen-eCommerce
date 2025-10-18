@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import {
@@ -31,21 +37,29 @@ describe("MicroInteractions - InteractiveButton", () => {
     });
 
     it("should render with custom className", () => {
-      render(<InteractiveButton className="custom-class">Button</InteractiveButton>);
+      render(
+        <InteractiveButton className="custom-class">Button</InteractiveButton>
+      );
       const button = screen.getByText("Button");
       expect(button).toHaveClass("custom-class");
     });
 
     it("should apply correct variant styles", () => {
-      const { rerender } = render(<InteractiveButton variant="primary">Primary</InteractiveButton>);
+      const { rerender } = render(
+        <InteractiveButton variant="primary">Primary</InteractiveButton>
+      );
       let button = screen.getByText("Primary");
       expect(button.className).toContain("from-blue-500");
 
-      rerender(<InteractiveButton variant="secondary">Secondary</InteractiveButton>);
+      rerender(
+        <InteractiveButton variant="secondary">Secondary</InteractiveButton>
+      );
       button = screen.getByText("Secondary");
       expect(button.className).toContain("bg-white");
 
-      rerender(<InteractiveButton variant="success">Success</InteractiveButton>);
+      rerender(
+        <InteractiveButton variant="success">Success</InteractiveButton>
+      );
       button = screen.getByText("Success");
       expect(button.className).toContain("from-green-500");
 
@@ -55,7 +69,9 @@ describe("MicroInteractions - InteractiveButton", () => {
     });
 
     it("should apply correct size styles", () => {
-      const { rerender } = render(<InteractiveButton size="sm">Small</InteractiveButton>);
+      const { rerender } = render(
+        <InteractiveButton size="sm">Small</InteractiveButton>
+      );
       let button = screen.getByText("Small");
       expect(button.className).toContain("text-sm");
 
@@ -72,8 +88,10 @@ describe("MicroInteractions - InteractiveButton", () => {
   describe("Interactions", () => {
     it("should handle click events", () => {
       const handleClick = jest.fn();
-      render(<InteractiveButton onClick={handleClick}>Click</InteractiveButton>);
-      
+      render(
+        <InteractiveButton onClick={handleClick}>Click</InteractiveButton>
+      );
+
       fireEvent.click(screen.getByText("Click"));
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
@@ -85,7 +103,7 @@ describe("MicroInteractions - InteractiveButton", () => {
           Disabled
         </InteractiveButton>
       );
-      
+
       fireEvent.click(screen.getByText("Disabled"));
       expect(handleClick).not.toHaveBeenCalled();
     });
@@ -93,18 +111,20 @@ describe("MicroInteractions - InteractiveButton", () => {
     it("should handle mouse press and release", () => {
       render(<InteractiveButton>Press Me</InteractiveButton>);
       const button = screen.getByText("Press Me");
-      
+
       fireEvent.mouseDown(button);
       fireEvent.mouseUp(button);
-      
+
       expect(button).toBeInTheDocument();
     });
 
     it("should handle keyboard events", () => {
       const handleClick = jest.fn();
-      render(<InteractiveButton onClick={handleClick}>Keyboard</InteractiveButton>);
+      render(
+        <InteractiveButton onClick={handleClick}>Keyboard</InteractiveButton>
+      );
       const button = screen.getByText("Keyboard");
-      
+
       fireEvent.keyDown(button, { key: "Enter", code: "Enter" });
       expect(handleClick).toHaveBeenCalled();
     });
@@ -131,7 +151,9 @@ describe("MicroInteractions - InteractiveButton", () => {
     });
 
     it("should support aria-label", () => {
-      render(<InteractiveButton aria-label="Custom Label">Button</InteractiveButton>);
+      render(
+        <InteractiveButton aria-label="Custom Label">Button</InteractiveButton>
+      );
       expect(screen.getByLabelText("Custom Label")).toBeInTheDocument();
     });
 
@@ -175,10 +197,10 @@ describe("MicroInteractions - AnimatedTooltip", () => {
           <button>Hover target</button>
         </AnimatedTooltip>
       );
-      
+
       const button = screen.getByText("Hover target");
       fireEvent.mouseEnter(button.parentElement);
-      
+
       await waitFor(() => {
         expect(screen.getByText("Tooltip content")).toBeInTheDocument();
       });
@@ -190,18 +212,20 @@ describe("MicroInteractions - AnimatedTooltip", () => {
           <button>Hover target</button>
         </AnimatedTooltip>
       );
-      
+
       const container = screen.getByText("Hover target").parentElement;
       fireEvent.mouseEnter(container);
-      
+
       await waitFor(() => {
         expect(screen.getByText("Disappearing tooltip")).toBeInTheDocument();
       });
-      
+
       fireEvent.mouseLeave(container);
-      
+
       await waitFor(() => {
-        expect(screen.queryByText("Disappearing tooltip")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("Disappearing tooltip")
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -213,10 +237,10 @@ describe("MicroInteractions - AnimatedTooltip", () => {
           <button>Button</button>
         </AnimatedTooltip>
       );
-      
+
       const container = screen.getByText("Button").parentElement;
       fireEvent.mouseEnter(container);
-      
+
       waitFor(() => {
         const tooltip = screen.getByText("Top tooltip");
         expect(tooltip).toHaveClass("bottom-full");
@@ -225,35 +249,38 @@ describe("MicroInteractions - AnimatedTooltip", () => {
 
     it("should support all position options", async () => {
       const positions = ["top", "bottom", "left", "right"];
-      
+
       for (const position of positions) {
         const { unmount } = render(
           <AnimatedTooltip content={`${position} tooltip`} position={position}>
             <button>{position}</button>
           </AnimatedTooltip>
         );
-        
+
         const container = screen.getByText(position).parentElement;
         fireEvent.mouseEnter(container);
-        
+
         await waitFor(() => {
           expect(screen.getByText(`${position} tooltip`)).toBeInTheDocument();
         });
-        
+
         unmount();
       }
     });
 
     it("should apply custom className to tooltip", async () => {
       render(
-        <AnimatedTooltip content="Custom styled" className="custom-tooltip-class">
+        <AnimatedTooltip
+          content="Custom styled"
+          className="custom-tooltip-class"
+        >
           <button>Button</button>
         </AnimatedTooltip>
       );
-      
+
       const container = screen.getByText("Button").parentElement;
       fireEvent.mouseEnter(container);
-      
+
       await waitFor(() => {
         const tooltip = screen.getByText("Custom styled");
         expect(tooltip).toHaveClass("custom-tooltip-class");
@@ -268,7 +295,7 @@ describe("MicroInteractions - AnimatedTooltip", () => {
           <button>Accessible button</button>
         </AnimatedTooltip>
       );
-      
+
       expect(screen.getByText("Accessible button")).toBeInTheDocument();
     });
   });
@@ -282,7 +309,7 @@ describe("MicroInteractions - FloatingActionButton", () => {
   ];
 
   beforeEach(() => {
-    mockActions.forEach(action => action.onClick.mockClear());
+    mockActions.forEach((action) => action.onClick.mockClear());
   });
 
   describe("Rendering", () => {
@@ -300,10 +327,10 @@ describe("MicroInteractions - FloatingActionButton", () => {
   describe("Action Menu", () => {
     it("should expand menu on click", async () => {
       render(<FloatingActionButton actions={mockActions} />);
-      
+
       const fab = screen.getByRole("button");
       fireEvent.click(fab);
-      
+
       await waitFor(() => {
         expect(screen.getByText("Add")).toBeInTheDocument();
         expect(screen.getByText("Edit")).toBeInTheDocument();
@@ -313,16 +340,16 @@ describe("MicroInteractions - FloatingActionButton", () => {
 
     it("should collapse menu on second click", async () => {
       render(<FloatingActionButton actions={mockActions} />);
-      
+
       const fab = screen.getByRole("button");
       fireEvent.click(fab);
-      
+
       await waitFor(() => {
         expect(screen.getByText("Add")).toBeInTheDocument();
       });
-      
+
       fireEvent.click(fab);
-      
+
       await waitFor(() => {
         expect(screen.queryByText("Add")).not.toBeInTheDocument();
       });
@@ -330,17 +357,17 @@ describe("MicroInteractions - FloatingActionButton", () => {
 
     it("should trigger action onClick", async () => {
       render(<FloatingActionButton actions={mockActions} />);
-      
+
       const fab = screen.getByRole("button");
       fireEvent.click(fab);
-      
+
       await waitFor(() => {
         expect(screen.getByText("Add")).toBeInTheDocument();
       });
-      
+
       const addButton = screen.getByText("Add");
       fireEvent.click(addButton);
-      
+
       expect(mockActions[0].onClick).toHaveBeenCalledTimes(1);
     });
   });
@@ -354,7 +381,7 @@ describe("MicroInteractions - FloatingActionButton", () => {
     it("should support keyboard navigation", () => {
       render(<FloatingActionButton actions={mockActions} />);
       const fab = screen.getByRole("button");
-      
+
       fireEvent.keyDown(fab, { key: "Enter" });
       expect(fab).toBeInTheDocument();
     });
@@ -369,7 +396,9 @@ describe("MicroInteractions - MagneticButton", () => {
     });
 
     it("should apply custom className", () => {
-      render(<MagneticButton className="magnetic-custom">Button</MagneticButton>);
+      render(
+        <MagneticButton className="magnetic-custom">Button</MagneticButton>
+      );
       expect(screen.getByText("Button")).toHaveClass("magnetic-custom");
     });
   });
@@ -378,7 +407,7 @@ describe("MicroInteractions - MagneticButton", () => {
     it("should handle mouse movement", () => {
       render(<MagneticButton strength={0.5}>Magnetic Button</MagneticButton>);
       const button = screen.getByText("Magnetic Button");
-      
+
       fireEvent.mouseMove(button, { clientX: 100, clientY: 100 });
       expect(button).toBeInTheDocument();
     });
@@ -386,10 +415,10 @@ describe("MicroInteractions - MagneticButton", () => {
     it("should reset position on mouse leave", () => {
       render(<MagneticButton>Magnetic Button</MagneticButton>);
       const button = screen.getByText("Magnetic Button");
-      
+
       fireEvent.mouseMove(button, { clientX: 100, clientY: 100 });
       fireEvent.mouseLeave(button);
-      
+
       expect(button).toBeInTheDocument();
     });
   });
@@ -397,8 +426,10 @@ describe("MicroInteractions - MagneticButton", () => {
   describe("Interactions", () => {
     it("should handle click events", () => {
       const handleClick = jest.fn();
-      render(<MagneticButton onClick={handleClick}>Click Magnetic</MagneticButton>);
-      
+      render(
+        <MagneticButton onClick={handleClick}>Click Magnetic</MagneticButton>
+      );
+
       fireEvent.click(screen.getByText("Click Magnetic"));
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
@@ -424,7 +455,9 @@ describe("MicroInteractions - InteractiveCard", () => {
     });
 
     it("should apply custom className", () => {
-      render(<InteractiveCard className="custom-card">Content</InteractiveCard>);
+      render(
+        <InteractiveCard className="custom-card">Content</InteractiveCard>
+      );
       const card = screen.getByText("Content").parentElement;
       expect(card).toHaveClass("custom-card");
     });
@@ -434,7 +467,7 @@ describe("MicroInteractions - InteractiveCard", () => {
     it("should handle mouse movement for tilt", () => {
       render(<InteractiveCard>Tilt Card</InteractiveCard>);
       const card = screen.getByText("Tilt Card").parentElement;
-      
+
       fireEvent.mouseMove(card, { clientX: 100, clientY: 100 });
       expect(card).toBeInTheDocument();
     });
@@ -442,10 +475,10 @@ describe("MicroInteractions - InteractiveCard", () => {
     it("should reset tilt on mouse leave", () => {
       render(<InteractiveCard>Tilt Card</InteractiveCard>);
       const card = screen.getByText("Tilt Card").parentElement;
-      
+
       fireEvent.mouseMove(card, { clientX: 100, clientY: 100 });
       fireEvent.mouseLeave(card);
-      
+
       expect(card).toBeInTheDocument();
     });
   });
@@ -453,8 +486,10 @@ describe("MicroInteractions - InteractiveCard", () => {
   describe("Interactions", () => {
     it("should handle click events", () => {
       const handleClick = jest.fn();
-      render(<InteractiveCard onClick={handleClick}>Clickable Card</InteractiveCard>);
-      
+      render(
+        <InteractiveCard onClick={handleClick}>Clickable Card</InteractiveCard>
+      );
+
       fireEvent.click(screen.getByText("Clickable Card"));
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
@@ -473,10 +508,10 @@ describe("MicroInteractions - Integration Tests", () => {
         <InteractiveButton>Proceed</InteractiveButton>
       </AnimatedTooltip>
     );
-    
+
     const button = screen.getByText("Proceed");
     expect(button).toBeInTheDocument();
-    
+
     fireEvent.mouseEnter(button.parentElement);
     await waitFor(() => {
       expect(screen.getByText("Click to proceed")).toBeInTheDocument();
@@ -489,7 +524,7 @@ describe("MicroInteractions - Integration Tests", () => {
         <MagneticButton>Magnetic Inside Card</MagneticButton>
       </InteractiveCard>
     );
-    
+
     expect(screen.getByText("Magnetic Inside Card")).toBeInTheDocument();
   });
 });
@@ -503,19 +538,21 @@ describe("MicroInteractions - Performance", () => {
         ))}
       </>
     );
-    
+
     expect(container.querySelectorAll("button")).toHaveLength(10);
   });
 
   it("should handle rapid interactions", () => {
     const handleClick = jest.fn();
-    render(<InteractiveButton onClick={handleClick}>Rapid Click</InteractiveButton>);
+    render(
+      <InteractiveButton onClick={handleClick}>Rapid Click</InteractiveButton>
+    );
     const button = screen.getByText("Rapid Click");
-    
+
     for (let i = 0; i < 10; i++) {
       fireEvent.click(button);
     }
-    
+
     expect(handleClick).toHaveBeenCalledTimes(10);
   });
 });

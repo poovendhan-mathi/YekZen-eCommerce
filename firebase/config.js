@@ -21,28 +21,34 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 // Connect to Firebase Emulator in development
-const useEmulator = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true';
+const useEmulator = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true";
 
-if (useEmulator && typeof window !== 'undefined') {
-  const firestorePort = process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_PORT || '8080';
-  const authPort = process.env.NEXT_PUBLIC_AUTH_EMULATOR_PORT || '9099';
-  const emulatorHost = process.env.NEXT_PUBLIC_FIREBASE_EMULATOR_HOST || 'localhost';
-  
+if (useEmulator && typeof window !== "undefined") {
+  const firestorePort =
+    process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_PORT || "8080";
+  const authPort = process.env.NEXT_PUBLIC_AUTH_EMULATOR_PORT || "9099";
+  const emulatorHost =
+    process.env.NEXT_PUBLIC_FIREBASE_EMULATOR_HOST || "localhost";
+
   try {
     // Connect Firestore to emulator
     connectFirestoreEmulator(db, emulatorHost, parseInt(firestorePort));
-    console.log(`🔧 Connected to Firestore Emulator at ${emulatorHost}:${firestorePort}`);
-    
+    console.log(
+      `🔧 Connected to Firestore Emulator at ${emulatorHost}:${firestorePort}`
+    );
+
     // Connect Auth to emulator
-    connectAuthEmulator(auth, `http://${emulatorHost}:${authPort}`, { disableWarnings: true });
+    connectAuthEmulator(auth, `http://${emulatorHost}:${authPort}`, {
+      disableWarnings: true,
+    });
     console.log(`🔧 Connected to Auth Emulator at ${emulatorHost}:${authPort}`);
   } catch (error) {
-    console.error('Error connecting to Firebase Emulator:', error);
+    console.error("Error connecting to Firebase Emulator:", error);
   }
 } else if (useEmulator) {
-  console.log('⚠️ Firebase Emulator is enabled but running on server-side');
+  console.log("⚠️ Firebase Emulator is enabled but running on server-side");
 } else {
-  console.log('🌐 Using production Firebase');
+  console.log("🌐 Using production Firebase");
 }
 
 export default app;

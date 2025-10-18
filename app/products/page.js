@@ -6,7 +6,11 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import ProductCard from "../../components/cards/ProductCard";
 import { MagnifyingGlassIcon, FunnelIcon } from "@heroicons/react/24/outline";
-import { getAllProducts, getProductsByCategory, searchProducts } from "../../firebase/productsService";
+import {
+  getAllProducts,
+  getProductsByCategory,
+  searchProducts,
+} from "../../firebase/productsService";
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -132,10 +136,7 @@ export default function ProductsPage() {
         </motion.div>
 
         {/* Products Grid - Now fetches from Firestore */}
-        <ProductsGrid
-          category={selectedCategory}
-          searchQuery={searchQuery}
-        />
+        <ProductsGrid category={selectedCategory} searchQuery={searchQuery} />
       </div>
     </div>
   );
@@ -152,24 +153,24 @@ function ProductsGrid({ category, searchQuery }) {
       try {
         setLoading(true);
         setError(null);
-        
+
         let fetchedProducts = [];
-        
+
         if (searchQuery.trim()) {
           // Search products
           fetchedProducts = await searchProducts(searchQuery);
-        } else if (category && category !== 'all') {
+        } else if (category && category !== "all") {
           // Filter by category
           fetchedProducts = await getProductsByCategory(category);
         } else {
           // Get all products
           fetchedProducts = await getAllProducts();
         }
-        
+
         setProducts(fetchedProducts);
       } catch (err) {
-        console.error('Error fetching products:', err);
-        setError('Failed to load products. Please try again.');
+        console.error("Error fetching products:", err);
+        setError("Failed to load products. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -210,7 +211,8 @@ function ProductsGrid({ category, searchQuery }) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 text-lg">
-          No products found. {searchQuery ? `Try a different search.` : `Check back later!`}
+          No products found.{" "}
+          {searchQuery ? `Try a different search.` : `Check back later!`}
         </p>
       </div>
     );

@@ -138,17 +138,17 @@ YekZen-eCommerce/
 
 ## Feature Comparison
 
-| Feature                  | Development (Emulator)  | Production (Cloud)      |
-|--------------------------|-------------------------|-------------------------|
-| **Data Persistence**     | ❌ Temporary            | ✅ Permanent            |
-| **Cost**                 | ✅ Free                 | 💰 Pay-as-you-go        |
-| **Speed**                | ⚡ Very Fast            | 🌐 Network dependent    |
-| **Internet Required**    | ❌ No                   | ✅ Yes                  |
-| **Setup Complexity**     | 🟢 Simple               | 🟡 Medium               |
-| **Multi-device Access**  | ❌ No                   | ✅ Yes                  |
-| **Debugging Tools**      | ✅ Emulator UI          | ✅ Firebase Console     |
-| **Security Rules Test**  | ✅ Yes                  | ✅ Yes                  |
-| **Real-time Sync**       | ✅ Local only           | ✅ Global               |
+| Feature                 | Development (Emulator) | Production (Cloud)   |
+| ----------------------- | ---------------------- | -------------------- |
+| **Data Persistence**    | ❌ Temporary           | ✅ Permanent         |
+| **Cost**                | ✅ Free                | 💰 Pay-as-you-go     |
+| **Speed**               | ⚡ Very Fast           | 🌐 Network dependent |
+| **Internet Required**   | ❌ No                  | ✅ Yes               |
+| **Setup Complexity**    | 🟢 Simple              | 🟡 Medium            |
+| **Multi-device Access** | ❌ No                  | ✅ Yes               |
+| **Debugging Tools**     | ✅ Emulator UI         | ✅ Firebase Console  |
+| **Security Rules Test** | ✅ Yes                 | ✅ Yes               |
+| **Real-time Sync**      | ✅ Local only          | ✅ Global            |
 
 ## Port Configuration
 
@@ -169,18 +169,18 @@ YekZen-eCommerce/
 ```javascript
 // firebase/config.js
 
-const useEmulator = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true';
+const useEmulator = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true";
 
-if (useEmulator && typeof window !== 'undefined') {
+if (useEmulator && typeof window !== "undefined") {
   // CLIENT-SIDE: Connect to emulator
-  connectFirestoreEmulator(db, 'localhost', 8080);
-  console.log('🔧 Using Local Emulator');
+  connectFirestoreEmulator(db, "localhost", 8080);
+  console.log("🔧 Using Local Emulator");
 } else if (useEmulator) {
   // SERVER-SIDE: Emulator enabled but can't connect
-  console.log('⚠️ Emulator enabled but server-side');
+  console.log("⚠️ Emulator enabled but server-side");
 } else {
   // PRODUCTION: Use Firebase Cloud
-  console.log('🌐 Using Firebase Cloud');
+  console.log("🌐 Using Firebase Cloud");
 }
 ```
 

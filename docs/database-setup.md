@@ -5,11 +5,13 @@ This guide explains how to add actual products to your Firestore database and di
 ## ✅ What's Been Done
 
 1. **Created Firestore Service** (`/firebase/productsService.js`)
+
    - Functions for CRUD operations: `addProduct`, `getAllProducts`, `getProductById`, etc.
    - Search and filter capabilities
    - Category-based queries
 
 2. **Created Seed Script** (`/scripts/seedProducts.js`)
+
    - Pre-configured with 8 sample products
    - Includes electronics, clothing, accessories, and sports items
    - Each product has realistic data (name, price, images, ratings, etc.)
@@ -36,6 +38,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
 **To get these values:**
+
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Select your project (or create a new one)
 3. Go to Project Settings > General
@@ -66,6 +69,7 @@ node scripts/seedProducts.js
 ```
 
 You should see output like:
+
 ```
 🌱 Starting to seed products...
 ✅ Added product: Premium Wireless Headphones (ID: abc123...)
@@ -115,6 +119,7 @@ Each product in Firestore has the following structure:
 ## 🎯 Features
 
 ### Current Features
+
 - ✅ Fetch all products from Firestore
 - ✅ Filter by category
 - ✅ Search products by name
@@ -134,14 +139,14 @@ import {
   addProduct,
   updateProduct,
   deleteProduct,
-  getFilteredProducts
-} from '../firebase/productsService';
+  getFilteredProducts,
+} from "../firebase/productsService";
 
 // Examples:
 const products = await getAllProducts();
-const electronics = await getProductsByCategory('Electronics');
+const electronics = await getProductsByCategory("Electronics");
 const featured = await getFeaturedProducts();
-const results = await searchProducts('headphones');
+const results = await searchProducts("headphones");
 ```
 
 ## 🚀 Adding More Products
@@ -163,7 +168,7 @@ const results = await searchProducts('headphones');
 ### Method 3: Via Code
 
 ```javascript
-import { addProduct } from '../firebase/productsService';
+import { addProduct } from "../firebase/productsService";
 
 const newProduct = {
   name: "New Product",
@@ -177,14 +182,17 @@ await addProduct(newProduct);
 ## 🛠 Troubleshooting
 
 ### Products Not Loading
+
 - Check Firebase config in `.env.local`
 - Verify Firestore is enabled in Firebase Console
 - Check browser console for errors
 - Ensure products collection exists and has data
 
 ### Permission Denied
+
 - In Firebase Console, go to Firestore > Rules
 - For development, use these rules (⚠️ not for production):
+
 ```
 rules_version = '2';
 service cloud.firestore {
@@ -198,6 +206,7 @@ service cloud.firestore {
 ```
 
 ### Images Not Loading
+
 - Make sure image URLs are accessible
 - Consider using Firebase Storage for images
 - Or use a CDN like Cloudinary or imgix
@@ -205,19 +214,23 @@ service cloud.firestore {
 ## 📦 Next Steps
 
 1. **Add Product Management Admin Panel**
+
    - Create, edit, delete products via UI
    - Bulk import/export
 
 2. **Add Product Reviews**
+
    - User-generated ratings and reviews
    - Review moderation
 
 3. **Add Inventory Management**
+
    - Track stock levels
    - Low stock alerts
    - Auto-update on orders
 
 4. **Add Product Variants**
+
    - Sizes, colors, etc.
    - Different prices per variant
 

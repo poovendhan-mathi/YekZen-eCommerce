@@ -139,7 +139,7 @@ describe("ScrollProgress - CircularScrollProgress", () => {
       const size = 60;
       const { container } = render(<CircularScrollProgress size={size} />);
       const circles = container.querySelectorAll("circle");
-      
+
       circles.forEach((circle) => {
         const cx = circle.getAttribute("cx");
         const cy = circle.getAttribute("cy");
@@ -253,7 +253,7 @@ describe("ScrollProgress - ScrollToTop", () => {
     it("should scroll to top when clicked", () => {
       const { container } = render(<ScrollToTop threshold={0} />);
       const button = container.querySelector("button");
-      
+
       if (button) {
         fireEvent.click(button);
         expect(mockScrollTo).toHaveBeenCalledWith({
@@ -266,7 +266,7 @@ describe("ScrollProgress - ScrollToTop", () => {
     it("should call scrollTo with smooth behavior", () => {
       const { container } = render(<ScrollToTop threshold={0} />);
       const button = container.querySelector("button");
-      
+
       if (button) {
         fireEvent.click(button);
         expect(mockScrollTo).toHaveBeenCalledWith(
@@ -281,7 +281,9 @@ describe("ScrollProgress - ScrollToTop", () => {
   describe("Accessibility", () => {
     it("should have aria-label", () => {
       const { container } = render(<ScrollToTop threshold={0} />);
-      const button = container.querySelector('button[aria-label="Scroll to top"]');
+      const button = container.querySelector(
+        'button[aria-label="Scroll to top"]'
+      );
       // Button may not be visible initially
       expect(container).toBeInTheDocument();
     });
@@ -289,7 +291,7 @@ describe("ScrollProgress - ScrollToTop", () => {
     it("should be keyboard accessible", () => {
       const { container } = render(<ScrollToTop threshold={0} />);
       const button = container.querySelector("button");
-      
+
       if (button) {
         expect(button).toHaveAttribute("type");
       }

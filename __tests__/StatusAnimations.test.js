@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import "@testing-library/jest-dom";
 import {
   AnimatedCheckmark,
@@ -199,7 +205,9 @@ describe("StatusAnimations - FormFieldAnimation", () => {
           <input />
         </FormFieldAnimation>
       );
-      expect(container.querySelector(".text-green-500")).not.toBeInTheDocument();
+      expect(
+        container.querySelector(".text-green-500")
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -220,7 +228,9 @@ describe("StatusAnimations - FormFieldAnimation", () => {
         </FormFieldAnimation>
       );
       expect(container.querySelector(".text-red-500")).not.toBeInTheDocument();
-      expect(container.querySelector(".text-green-500")).not.toBeInTheDocument();
+      expect(
+        container.querySelector(".text-green-500")
+      ).not.toBeInTheDocument();
     });
   });
 });
@@ -326,7 +336,7 @@ describe("StatusAnimations - NotificationToast", () => {
     it("should auto-close after duration", async () => {
       jest.useFakeTimers();
       const handleClose = jest.fn();
-      
+
       render(
         <NotificationToast
           type="success"
@@ -348,7 +358,7 @@ describe("StatusAnimations - NotificationToast", () => {
     it("should not auto-close when duration is 0", async () => {
       jest.useFakeTimers();
       const handleClose = jest.fn();
-      
+
       render(
         <NotificationToast
           type="success"
@@ -429,7 +439,9 @@ describe("StatusAnimations - LoadingButton", () => {
 
   describe("Loading State", () => {
     it("should show spinner when loading", () => {
-      const { container } = render(<LoadingButton isLoading={true}>Submit</LoadingButton>);
+      const { container } = render(
+        <LoadingButton isLoading={true}>Submit</LoadingButton>
+      );
       const spinner = container.querySelector(".border-t-transparent");
       expect(spinner).toBeInTheDocument();
     });
@@ -484,7 +496,9 @@ describe("StatusAnimations - LoadingButton", () => {
     });
 
     it("should toggle between loading and normal states", () => {
-      const { rerender } = render(<LoadingButton isLoading={false}>Submit</LoadingButton>);
+      const { rerender } = render(
+        <LoadingButton isLoading={false}>Submit</LoadingButton>
+      );
       expect(screen.getByText("Submit")).toBeInTheDocument();
 
       rerender(<LoadingButton isLoading={true}>Submit</LoadingButton>);
@@ -596,18 +610,20 @@ describe("StatusAnimations - Integration Tests", () => {
     jest.useFakeTimers();
 
     render(<TestComponent />);
-    
+
     const button = screen.getByRole("button");
     fireEvent.click(button);
-    
+
     expect(screen.getByText("Loading...")).toBeInTheDocument();
-    
+
     act(() => {
       jest.advanceTimersByTime(1000);
     });
 
     await waitFor(() => {
-      expect(screen.getByText("Form submitted successfully")).toBeInTheDocument();
+      expect(
+        screen.getByText("Form submitted successfully")
+      ).toBeInTheDocument();
     });
 
     jest.useRealTimers();
@@ -635,7 +651,10 @@ describe("StatusAnimations - Performance", () => {
 
     for (let i = 0; i < 10; i++) {
       rerender(
-        <FormFieldAnimation error={i % 2 === 0 ? "Error" : null} success={i % 2 !== 0}>
+        <FormFieldAnimation
+          error={i % 2 === 0 ? "Error" : null}
+          success={i % 2 !== 0}
+        >
           <input />
         </FormFieldAnimation>
       );

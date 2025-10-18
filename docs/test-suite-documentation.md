@@ -1,16 +1,19 @@
 # Comprehensive Test Suite Documentation
 
 ## Overview
+
 This document provides detailed information about the test suites created for the YekZen eCommerce animation components and enhanced features.
 
 ## Test Files Created
 
 ### 1. `__tests__/MicroInteractions.test.js` (500+ lines)
+
 Comprehensive tests for all micro-interaction components.
 
 #### Test Coverage:
 
 **InteractiveButton Component (80+ tests)**
+
 - ✅ Rendering with children, custom className
 - ✅ All variant styles (primary, secondary, success, danger)
 - ✅ All size options (sm, md, lg)
@@ -22,6 +25,7 @@ Comprehensive tests for all micro-interaction components.
 - ✅ Custom props forwarding
 
 **AnimatedTooltip Component (40+ tests)**
+
 - ✅ Initial rendering (hidden state)
 - ✅ Show on mouse enter
 - ✅ Hide on mouse leave
@@ -32,6 +36,7 @@ Comprehensive tests for all micro-interaction components.
 - ✅ Animation timing
 
 **FloatingActionButton Component (30+ tests)**
+
 - ✅ FAB button rendering
 - ✅ Hidden actions initially
 - ✅ Menu expansion on click
@@ -41,6 +46,7 @@ Comprehensive tests for all micro-interaction components.
 - ✅ Keyboard navigation support
 
 **MagneticButton Component (20+ tests)**
+
 - ✅ Rendering with children
 - ✅ Custom className
 - ✅ Mouse movement handling
@@ -49,6 +55,7 @@ Comprehensive tests for all micro-interaction components.
 - ✅ Custom strength parameter
 
 **InteractiveCard Component (20+ tests)**
+
 - ✅ Rendering with children
 - ✅ Custom className
 - ✅ 3D tilt effect on mouse move
@@ -57,11 +64,13 @@ Comprehensive tests for all micro-interaction components.
 - ✅ Custom intensity parameter
 
 **Integration Tests (10+ tests)**
+
 - ✅ Tooltip with Button combination
 - ✅ Card with Magnetic Button
 - ✅ Multiple components together
 
 **Performance Tests (10+ tests)**
+
 - ✅ Multiple buttons rendering
 - ✅ Rapid interaction handling
 - ✅ Memory efficiency
@@ -69,11 +78,13 @@ Comprehensive tests for all micro-interaction components.
 ---
 
 ### 2. `__tests__/StatusAnimations.test.js` (600+ lines)
+
 In-depth tests for status and notification animations.
 
 #### Test Coverage:
 
 **AnimatedCheckmark Component (20+ tests)**
+
 - ✅ Icon rendering
 - ✅ Custom size application
 - ✅ Custom color support
@@ -82,6 +93,7 @@ In-depth tests for status and notification animations.
 - ✅ SVG structure
 
 **AnimatedError Component (15+ tests)**
+
 - ✅ Error icon rendering
 - ✅ Custom size
 - ✅ Red color default
@@ -89,12 +101,14 @@ In-depth tests for status and notification animations.
 - ✅ Animation behavior
 
 **AnimatedWarning Component (15+ tests)**
+
 - ✅ Warning icon rendering
 - ✅ Custom size
 - ✅ Warning color
 - ✅ Triangle structure
 
 **FormFieldAnimation Component (50+ tests)**
+
 - ✅ Children rendering
 - ✅ Error message display
 - ✅ Error styling (red)
@@ -107,6 +121,7 @@ In-depth tests for status and notification animations.
 - ✅ Combined state handling
 
 **NotificationToast Component (60+ tests)**
+
 - ✅ Visible/hidden rendering
 - ✅ Success toast styling
 - ✅ Error toast styling
@@ -119,6 +134,7 @@ In-depth tests for status and notification animations.
 - ✅ Close button aria-label
 
 **LoadingButton Component (50+ tests)**
+
 - ✅ Children rendering when not loading
 - ✅ Loading text display
 - ✅ Default loading text
@@ -133,22 +149,26 @@ In-depth tests for status and notification animations.
 - ✅ Screen reader compatibility
 
 **Integration Tests (20+ tests)**
+
 - ✅ Form validation flow
 - ✅ LoadingButton with NotificationToast
 - ✅ Complete user interaction flows
 
 **Performance Tests (10+ tests)**
+
 - ✅ Multiple status indicators
 - ✅ Rapid state changes
 
 ---
 
 ### 3. `__tests__/ScrollProgress.test.js` (400+ lines)
+
 Extensive tests for scroll tracking components.
 
 #### Test Coverage:
 
 **ScrollProgressBar Component (40+ tests)**
+
 - ✅ Progress bar rendering
 - ✅ Top positioning (fixed)
 - ✅ Correct height (1px)
@@ -162,6 +182,7 @@ Extensive tests for scroll tracking components.
 - ✅ Left origin scaling
 
 **CircularScrollProgress Component (50+ tests)**
+
 - ✅ SVG rendering
 - ✅ Bottom-right positioning
 - ✅ High z-index
@@ -177,6 +198,7 @@ Extensive tests for scroll tracking components.
 - ✅ Round stroke cap
 
 **ScrollToTop Component (40+ tests)**
+
 - ✅ Hidden initially (below threshold)
 - ✅ Gradient background
 - ✅ Bottom-right positioning
@@ -193,15 +215,18 @@ Extensive tests for scroll tracking components.
 - ✅ Hover shadow effect
 
 **Integration Tests (20+ tests)**
+
 - ✅ All scroll components together
 - ✅ No positioning conflicts
 - ✅ Different z-indexes maintained
 
 **Performance Tests (15+ tests)**
+
 - ✅ Multiple progress bars
 - ✅ Size variations
 
 **Edge Cases (30+ tests)**
+
 - ✅ Undefined/null color handling
 - ✅ Very small size (10px)
 - ✅ Very large size (200px)
@@ -214,11 +239,13 @@ Extensive tests for scroll tracking components.
 ---
 
 ### 4. `__tests__/ProductCard.enhanced.test.js` (800+ lines)
+
 Comprehensive tests for the enhanced ProductCard component.
 
 #### Test Coverage:
 
 **Basic Rendering (30+ tests)**
+
 - ✅ Product name display
 - ✅ Price display
 - ✅ Image with alt text
@@ -228,12 +255,14 @@ Comprehensive tests for the enhanced ProductCard component.
 - ✅ Review count
 
 **Discount Badge (20+ tests)**
+
 - ✅ Badge display with discount
 - ✅ No badge without original price
 - ✅ Correct discount calculation
 - ✅ Red background styling
 
 **Wishlist Functionality (25+ tests)**
+
 - ✅ Empty heart icon initially
 - ✅ Toggle on click
 - ✅ Multiple toggles
@@ -241,6 +270,7 @@ Comprehensive tests for the enhanced ProductCard component.
 - ✅ State persistence during session
 
 **Add to Cart Functionality (50+ tests)**
+
 - ✅ Button appears on hover
 - ✅ addToCart callback trigger
 - ✅ Loading state display
@@ -250,56 +280,66 @@ Comprehensive tests for the enhanced ProductCard component.
 - ✅ Cart context integration
 
 **Quick View Functionality (15+ tests)**
+
 - ✅ Button appears on hover
 - ✅ Correct link to detail page
 - ✅ Proper navigation
 
 **Out of Stock State (20+ tests)**
+
 - ✅ Overlay display
 - ✅ Proper styling
 - ✅ Disabled add to cart
 - ✅ Visual feedback
 
 **3D Tilt Effect (20+ tests)**
+
 - ✅ Mouse movement handling
 - ✅ Tilt reset on mouse leave
 - ✅ Position tracking
 - ✅ Boundary calculations
 
 **Rating Display (20+ tests)**
+
 - ✅ Correct number of filled stars
 - ✅ Different rating values (1-5)
 - ✅ Decimal ratings
 - ✅ Zero rating
 
 **Product Links (10+ tests)**
+
 - ✅ Image link to detail
 - ✅ Title link to detail
 - ✅ Correct href attributes
 
 **Hover Effects (20+ tests)**
+
 - ✅ Overlay appears on hover
 - ✅ Overlay hides on leave
 - ✅ Button visibility toggle
 - ✅ Animation timing
 
 **Animation Index (10+ tests)**
+
 - ✅ Index prop acceptance
 - ✅ Different indices (0-10)
 - ✅ Stagger effect
 
 **Cart Context Integration (15+ tests)**
+
 - ✅ With CartContext
 - ✅ Without CartContext (fallback)
 - ✅ Fallback function
 
 **Accessibility (20+ tests)**
+
 - ✅ ARIA labels on buttons
 - ✅ Keyboard navigation
 - ✅ Image alt text
 - ✅ Focus management
 
 **Edge Cases (40+ tests)**
+
 - ✅ Missing product properties
 - ✅ Zero price
 - ✅ Very long names (200 chars)
@@ -309,6 +349,7 @@ Comprehensive tests for the enhanced ProductCard component.
 - ✅ Undefined properties
 
 **Performance Tests (20+ tests)**
+
 - ✅ Multiple cards (10+)
 - ✅ Rapid hover events
 - ✅ Memory efficiency
@@ -318,16 +359,20 @@ Comprehensive tests for the enhanced ProductCard component.
 ## Test Statistics
 
 ### Total Test Suites: 4
+
 ### Total Test Cases: 2000+
+
 ### Code Coverage Target: 80%+
 
 ### Test Distribution:
+
 - **MicroInteractions**: 200+ tests
 - **StatusAnimations**: 600+ tests
 - **ScrollProgress**: 400+ tests
 - **ProductCard Enhanced**: 800+ tests
 
 ### Test Categories:
+
 1. **Rendering Tests**: ~30%
 2. **Interaction Tests**: ~25%
 3. **State Management Tests**: ~20%
@@ -338,11 +383,13 @@ Comprehensive tests for the enhanced ProductCard component.
 ## Running Tests
 
 ### Run All Tests
+
 ```bash
 npm test
 ```
 
 ### Run Specific Test Suite
+
 ```bash
 npm test MicroInteractions.test.js
 npm test StatusAnimations.test.js
@@ -351,16 +398,19 @@ npm test ProductCard.enhanced.test.js
 ```
 
 ### Run Tests in Watch Mode
+
 ```bash
 npm test -- --watch
 ```
 
 ### Run Tests with Coverage
+
 ```bash
 npm test -- --coverage
 ```
 
 ### Run Tests Silently
+
 ```bash
 npm test -- --silent
 ```
@@ -368,21 +418,23 @@ npm test -- --silent
 ## Test Patterns Used
 
 ### 1. **Arrange-Act-Assert (AAA)**
+
 ```javascript
 it("should toggle wishlist state on click", () => {
   // Arrange
   renderWithCart(mockProduct);
   const button = screen.getByLabelText("Add to wishlist");
-  
+
   // Act
   fireEvent.click(button);
-  
+
   // Assert
   expect(button).toHaveAttribute("aria-label", "Remove from wishlist");
 });
 ```
 
 ### 2. **Given-When-Then (BDD)**
+
 ```javascript
 it("given a product with discount, when rendered, then discount badge appears", () => {
   renderWithCart(mockProduct);
@@ -392,6 +444,7 @@ it("given a product with discount, when rendered, then discount badge appears", 
 ```
 
 ### 3. **Mocking External Dependencies**
+
 ```javascript
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -401,6 +454,7 @@ jest.mock("next/navigation", () => ({
 ```
 
 ### 4. **Integration Testing**
+
 ```javascript
 it("should work with form validation flow", async () => {
   // Test multiple components working together
@@ -410,32 +464,41 @@ it("should work with form validation flow", async () => {
 ## Best Practices Implemented
 
 ### ✅ Test Isolation
+
 Each test is independent and doesn't rely on other tests.
 
 ### ✅ Clear Test Names
+
 Test names describe what is being tested and expected outcome.
 
 ### ✅ Mock External Dependencies
+
 All external modules (Next.js, framer-motion) are properly mocked.
 
 ### ✅ Accessibility Testing
+
 ARIA labels, keyboard navigation, and screen reader compatibility tested.
 
 ### ✅ Edge Cases Covered
+
 Null values, undefined, zero values, extreme values tested.
 
 ### ✅ Performance Testing
+
 Multiple instances, rapid interactions tested for efficiency.
 
 ### ✅ Async Handling
+
 Proper use of `waitFor`, `act`, and fake timers for async operations.
 
 ### ✅ Clean Up
+
 Proper unmounting, timer cleanup, and spy restoration.
 
 ## Mock Strategies
 
 ### 1. **Framer Motion Mocking**
+
 ```javascript
 jest.mock("framer-motion", () => ({
   motion: {
@@ -449,6 +512,7 @@ jest.mock("framer-motion", () => ({
 ```
 
 ### 2. **Next.js Mocking**
+
 ```javascript
 jest.mock("next/image", () => {
   return function MockedImage({ src, alt, ...props }) {
@@ -464,6 +528,7 @@ jest.mock("next/link", () => {
 ```
 
 ### 3. **Context Mocking**
+
 ```javascript
 const mockCartValue = {
   cart: { items: [] },
@@ -473,30 +538,31 @@ const mockCartValue = {
 
 <CartContext.Provider value={mockCartValue}>
   <Component />
-</CartContext.Provider>
+</CartContext.Provider>;
 ```
 
 ## Continuous Integration
 
 ### CI/CD Pipeline Commands
+
 ```yaml
 # .github/workflows/tests.yml
 - name: Run Tests
   run: npm test -- --ci --coverage --maxWorkers=2
-  
+
 - name: Upload Coverage
   uses: codecov/codecov-action@v3
 ```
 
 ## Test Coverage Goals
 
-| Component | Current | Target |
-|-----------|---------|--------|
-| MicroInteractions | 95% | 90% |
-| StatusAnimations | 93% | 90% |
-| ScrollProgress | 91% | 85% |
-| ProductCard | 96% | 95% |
-| **Overall** | **94%** | **90%** |
+| Component         | Current | Target  |
+| ----------------- | ------- | ------- |
+| MicroInteractions | 95%     | 90%     |
+| StatusAnimations  | 93%     | 90%     |
+| ScrollProgress    | 91%     | 85%     |
+| ProductCard       | 96%     | 95%     |
+| **Overall**       | **94%** | **90%** |
 
 ## Known Testing Limitations
 
@@ -508,6 +574,7 @@ const mockCartValue = {
 ## Future Test Enhancements
 
 ### Phase 10 Additions:
+
 1. **E2E Tests** with Playwright/Cypress
 2. **Visual Regression Tests** with Percy
 3. **Performance Tests** with Lighthouse CI

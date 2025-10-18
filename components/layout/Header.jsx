@@ -22,10 +22,8 @@ const Header = () => {
   const { cart } = useCart();
   const { user } = useAuth();
 
-  const cartItemsCount = cart?.items?.reduce(
-    (total, item) => total + item.quantity,
-    0
-  ) || 0;
+  const cartItemsCount =
+    cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
 
   const navigation = [
     { name: "Home", href: "/" },
