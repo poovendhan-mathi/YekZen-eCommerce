@@ -191,3 +191,53 @@ export const ScrollProgressBar = () => {
     />
   );
 };
+
+// Enhanced reveal text with better animation
+export const EnhancedRevealText = ({ text, className = "" }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  const words = text.split(" ");
+
+  return (
+    <motion.div ref={ref} className={className}>
+      {words.map((word, index) => (
+        <motion.span
+          key={index}
+          initial={{ opacity: 0, y: 20, rotateX: 90 }}
+          animate={
+            isInView
+              ? { opacity: 1, y: 0, rotateX: 0 }
+              : { opacity: 0, y: 20, rotateX: 90 }
+          }
+          transition={{
+            duration: 0.6,
+            delay: index * 0.08,
+            ease: [0.21, 1.11, 0.81, 0.99],
+          }}
+          className="inline-block mr-2"
+        >
+          {word}
+        </motion.span>
+      ))}
+    </motion.div>
+  );
+};
+
+// Morphing shapes
+export const MorphingShape = ({ className = "" }) => {
+  return (
+    <motion.div
+      className={`w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-500 ${className}`}
+      animate={{
+        borderRadius: ["20%", "50%", "20%"],
+        rotate: [0, 90, 180, 270, 360],
+      }}
+      transition={{
+        duration: 4,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    />
+  );
+};

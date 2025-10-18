@@ -13,7 +13,8 @@ export default function ContactPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Contact Us</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Have a question or need assistance? We're here to help! Reach out to us through any of the channels below.
+            Have a question or need assistance? We're here to help! Reach out to
+            us through any of the channels below.
           </p>
         </div>
 
@@ -21,8 +22,10 @@ export default function ContactPage() {
           {/* Contact Information */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Get in Touch</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Get in Touch
+              </h2>
+
               <div className="space-y-4">
                 <div className="flex items-start">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4 mt-1">
@@ -30,7 +33,13 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Address</h3>
-                    <p className="text-gray-600">123 Premium Street<br />Shopping District<br />City, State 12345</p>
+                    <p className="text-gray-600">
+                      123 Premium Street
+                      <br />
+                      Shopping District
+                      <br />
+                      City, State 12345
+                    </p>
                   </div>
                 </div>
 
@@ -59,8 +68,14 @@ export default function ContactPage() {
                     <span className="text-orange-600">⏰</span>
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">Business Hours</h3>
-                    <p className="text-gray-600">Mon - Fri: 9:00 AM - 6:00 PM<br />Sat - Sun: 10:00 AM - 4:00 PM</p>
+                    <h3 className="font-medium text-gray-900">
+                      Business Hours
+                    </h3>
+                    <p className="text-gray-600">
+                      Mon - Fri: 9:00 AM - 6:00 PM
+                      <br />
+                      Sat - Sun: 10:00 AM - 4:00 PM
+                    </p>
                   </div>
                 </div>
               </div>
@@ -68,12 +83,22 @@ export default function ContactPage() {
 
             {/* Quick Links */}
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Support</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Quick Support
+              </h2>
               <div className="space-y-3">
-                <a href="#" className="block text-blue-600 hover:text-blue-700">📋 FAQ</a>
-                <a href="#" className="block text-blue-600 hover:text-blue-700">🚚 Track Your Order</a>
-                <a href="#" className="block text-blue-600 hover:text-blue-700">↩️ Returns & Refunds</a>
-                <a href="#" className="block text-blue-600 hover:text-blue-700">💬 Live Chat</a>
+                <a href="#" className="block text-blue-600 hover:text-blue-700">
+                  📋 FAQ
+                </a>
+                <a href="#" className="block text-blue-600 hover:text-blue-700">
+                  🚚 Track Your Order
+                </a>
+                <a href="#" className="block text-blue-600 hover:text-blue-700">
+                  ↩️ Returns & Refunds
+                </a>
+                <a href="#" className="block text-blue-600 hover:text-blue-700">
+                  💬 Live Chat
+                </a>
               </div>
             </div>
           </div>
@@ -81,12 +106,17 @@ export default function ContactPage() {
           {/* Contact Form */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Send us a Message</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Send us a Message
+              </h2>
+
               <form className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="firstName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       First Name *
                     </label>
                     <input
@@ -98,7 +128,10 @@ export default function ContactPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="lastName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Last Name *
                     </label>
                     <input
@@ -112,7 +145,10 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Email Address *
                   </label>
                   <input
@@ -125,7 +161,10 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Subject *
                   </label>
                   <select
@@ -144,7 +183,10 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Message *
                   </label>
                   <textarea
@@ -164,7 +206,10 @@ export default function ContactPage() {
                     type="checkbox"
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="newsletter" className="ml-2 block text-sm text-gray-700">
+                  <label
+                    htmlFor="newsletter"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
                     Subscribe to our newsletter for updates and offers
                   </label>
                 </div>
@@ -183,26 +228,52 @@ export default function ContactPage() {
         {/* FAQ Section */}
         <div className="mt-16">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-            <p className="text-gray-600">Find quick answers to common questions</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-gray-600">
+              Find quick answers to common questions
+            </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">How can I track my order?</h3>
-              <p className="text-gray-600">You can track your order using the tracking number sent to your email, or log into your account and view order status in the Orders section.</p>
+              <h3 className="font-semibold text-gray-900 mb-3">
+                How can I track my order?
+              </h3>
+              <p className="text-gray-600">
+                You can track your order using the tracking number sent to your
+                email, or log into your account and view order status in the
+                Orders section.
+              </p>
             </div>
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">What is your return policy?</h3>
-              <p className="text-gray-600">We offer a 30-day return policy for most items. Items must be in original condition and packaging for a full refund.</p>
+              <h3 className="font-semibold text-gray-900 mb-3">
+                What is your return policy?
+              </h3>
+              <p className="text-gray-600">
+                We offer a 30-day return policy for most items. Items must be in
+                original condition and packaging for a full refund.
+              </p>
             </div>
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Do you offer international shipping?</h3>
-              <p className="text-gray-600">Yes, we ship to most countries worldwide. Shipping costs and delivery times vary by location. Check our shipping page for details.</p>
+              <h3 className="font-semibold text-gray-900 mb-3">
+                Do you offer international shipping?
+              </h3>
+              <p className="text-gray-600">
+                Yes, we ship to most countries worldwide. Shipping costs and
+                delivery times vary by location. Check our shipping page for
+                details.
+              </p>
             </div>
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">How do I change or cancel my order?</h3>
-              <p className="text-gray-600">Orders can be modified or cancelled within 1 hour of placement. Contact our customer service team immediately for assistance.</p>
+              <h3 className="font-semibold text-gray-900 mb-3">
+                How do I change or cancel my order?
+              </h3>
+              <p className="text-gray-600">
+                Orders can be modified or cancelled within 1 hour of placement.
+                Contact our customer service team immediately for assistance.
+              </p>
             </div>
           </div>
         </div>

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useAuth } from "../../contexts/AuthContext";
+import toast from "react-hot-toast";
 import {
   ChartBarIcon,
   ShoppingBagIcon,
@@ -57,6 +60,23 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const router = useRouter();
+
+  // Admin authentication check
+  useEffect(() => {
+    if (!user) {
+      toast.error("Please sign in to access admin dashboard");
+      router.push("/signin?returnUrl=" + encodeURIComponent("/admin"));
+      return;
+    }
+
+    if (user.email !== "admin@yekzen.com") {
+      toast.error("Access denied. Admin privileges required.");
+      router.push("/");
+      return;
+    }
+  }, [user, router]);
 
   // Mock data - in real app, fetch from API
   useEffect(() => {

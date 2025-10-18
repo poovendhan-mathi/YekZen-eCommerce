@@ -12,6 +12,9 @@ import {
 import Button from "../components/ui/Button";
 import MockProductGrid from "../components/mock/MockProductGrid";
 import Link from "next/link";
+import { Suspense } from "react";
+import { ProductGridSkeleton } from "../components/ui/Skeleton";
+import { ScrollToTop } from "../components/ui/ScrollProgress";
 
 export default function HomePage() {
   const features = [
@@ -85,9 +88,9 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.8 }}
               >
-                Premium
+                Welcome to
                 <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                  Tech Store
+                  YekZen Store
                 </span>
               </motion.h1>
 
@@ -275,7 +278,9 @@ export default function HomePage() {
                 whileHover={{ y: -5 }}
                 className="relative group cursor-pointer"
               >
-                <Link href={`/products?category=${category.name.toLowerCase()}`}>
+                <Link
+                  href={`/products?category=${category.name.toLowerCase()}`}
+                >
                   <div className="relative overflow-hidden rounded-xl aspect-square">
                     <img
                       src={category.image}
@@ -312,7 +317,9 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <MockProductGrid limit={4} />
+          <Suspense fallback={<ProductGridSkeleton count={4} />}>
+            <MockProductGrid limit={4} />
+          </Suspense>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -360,6 +367,9 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Scroll to Top Button */}
+      <ScrollToTop threshold={400} />
     </div>
   );
 }

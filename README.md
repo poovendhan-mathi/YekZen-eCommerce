@@ -2,6 +2,13 @@
 
 A modern, luxury-inspired eCommerce web app featuring smooth animations, dual payment systems (Stripe + Razorpay UPI), Firebase backend, and comprehensive status tracking.
 
+## 🆕 NEW: Local Development Database Setup
+
+**Development**: Uses local Firebase Emulator (fast, free, offline)  
+**Production**: Uses Firebase Cloud (persistent, scalable)
+
+**Quick Start**: See [ENVIRONMENT-SETUP.md](./ENVIRONMENT-SETUP.md) or [Dev vs Prod Guide](./docs/dev-vs-prod-database.md)
+
 ## 🚀 Implementation Status
 
 **Phase 1: ✅ Project Setup (COMPLETED)**

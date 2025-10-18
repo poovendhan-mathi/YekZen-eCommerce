@@ -15,13 +15,14 @@ const MockProductGrid = ({ limit, category, searchQuery }) => {
       try {
         setLoading(true);
         let allProducts = await dbService.getProducts();
-        
+
         // Filter products based on category and search query
         let filteredProducts = allProducts;
 
         if (category && category !== "all") {
           filteredProducts = filteredProducts.filter(
-            (product) => product.category.toLowerCase() === category.toLowerCase()
+            (product) =>
+              product.category.toLowerCase() === category.toLowerCase()
           );
         }
 
@@ -41,7 +42,7 @@ const MockProductGrid = ({ limit, category, searchQuery }) => {
 
         setProducts(displayProducts);
       } catch (error) {
-        console.error('Error loading products:', error);
+        console.error("Error loading products:", error);
       } finally {
         setLoading(false);
       }
@@ -69,7 +70,10 @@ const MockProductGrid = ({ limit, category, searchQuery }) => {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       >
         {[...Array(8)].map((_, index) => (
-          <div key={index} className="bg-gray-200 rounded-xl h-96 animate-pulse"></div>
+          <div
+            key={index}
+            className="bg-gray-200 rounded-xl h-96 animate-pulse"
+          ></div>
         ))}
       </motion.div>
     );
@@ -129,8 +133,8 @@ const MockProductGrid = ({ limit, category, searchQuery }) => {
                 : "All Products"}
             </h2>
             <p className="text-gray-600 mt-1">
-              {products.length}{" "}
-              {products.length === 1 ? "product" : "products"} found
+              {products.length} {products.length === 1 ? "product" : "products"}{" "}
+              found
               {searchQuery && ` for "${searchQuery}"`}
             </p>
           </div>
@@ -168,9 +172,7 @@ const MockProductGrid = ({ limit, category, searchQuery }) => {
           transition={{ delay: 0.5 }}
           className="text-center mt-12"
         >
-          <button className="btn-primary">
-            Load More Products
-          </button>
+          <button className="btn-primary">Load More Products</button>
         </motion.div>
       )}
 

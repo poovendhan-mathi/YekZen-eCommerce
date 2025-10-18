@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
+import { FormFieldAnimation, LoadingButton } from "../ui/StatusAnimations";
 
 const LoginForm = ({ onToggleForm, onClose }) => {
   const [formData, setFormData] = useState({
@@ -83,7 +84,10 @@ const LoginForm = ({ onToggleForm, onClose }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
+        <FormFieldAnimation
+          error={errors.email}
+          success={formData.email && !errors.email}
+        >
           <Input
             type="email"
             name="email"
@@ -93,39 +97,43 @@ const LoginForm = ({ onToggleForm, onClose }) => {
             error={errors.email}
             required
           />
-        </div>
+        </FormFieldAnimation>
 
-        <div className="relative">
-          <Input
-            type={showPassword ? "text" : "password"}
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-          >
-            {showPassword ? (
-              <EyeSlashIcon className="w-5 h-5" />
-            ) : (
-              <EyeIcon className="w-5 h-5" />
-            )}
-          </button>
-        </div>
-
-        <Button
-          type="submit"
-          variant="primary"
-          className="w-full"
-          disabled={isLoading}
+        <FormFieldAnimation
+          error={errors.password}
+          success={formData.password && !errors.password}
         >
-          {isLoading ? "Signing In..." : "Sign In"}
-        </Button>
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              error={errors.password}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? (
+                <EyeSlashIcon className="w-5 h-5" />
+              ) : (
+                <EyeIcon className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+        </FormFieldAnimation>
+
+        <LoadingButton
+          isLoading={isLoading}
+          loadingText="Signing In..."
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-shadow"
+        >
+          Sign In
+        </LoadingButton>
       </form>
 
       <div className="mt-6 text-center">

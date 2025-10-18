@@ -1,7 +1,7 @@
 // Goal: Display mock products in animated card grid using TailwindCSS and Framer Motion
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
   StarIcon,
   HeartIcon,
@@ -13,11 +13,27 @@ import Button from "../ui/Button";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "../../contexts/CartContext";
+import { AnimatedTooltip } from "../ui/MicroInteractions";
+import { InteractiveCard } from "../ui/MicroInteractions";
 
 const ProductCard = ({ product, index = 0 }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const { addToCart } = useCart();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // Enhanced micro-interactions
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotateX = useTransform(mouseY, [-100, 100], [5, -5]);
+  const rotateY = useTransform(mouseX, [-100, 100], [-5, 5]);
+  // Try to get addToCart from CartContext; provide a fallback for tests or when provider is absent
+  let addToCart = (p) => console.log("Added to cart:", p.name);
+  try {
+    const cartContext = useCart();
+    if (cartContext && cartContext.addToCart) addToCart = cartContext.addToCart;
+  } catch (err) {
+    // No CartProvider in tree (e.g., unit tests) – keep fallback
+  }
 
   const discount = product.originalPrice
     ? Math.round(
@@ -25,10 +41,15 @@ const ProductCard = ({ product, index = 0 }) => {
       )
     : 0;
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsAddingToCart(true);
+
+    // Simulate async operation
+    await new Promise((resolve) => setTimeout(resolve, 600));
     addToCart(product);
+    setIsAddingToCart(false);
   };
 
   const containerVariants = {
@@ -59,15 +80,35 @@ const ProductCard = ({ product, index = 0 }) => {
     },
   };
 
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      whileHover={{ y: -5 }}
-      className="bg-white rounded-xl shadow-lg overflow-hidden group cursor-pointer"
+      whileHover={{ y: -8 }}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d",
+      }}
+      className="bg-white rounded-xl shadow-lg overflow-hidden group cursor-pointer relative"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
     >
       {/* Product Image */}
       <div className="relative overflow-hidden aspect-square">
@@ -99,47 +140,94 @@ const ProductCard = ({ product, index = 0 }) => {
         )}
 
         {/* Wishlist Button */}
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setIsWishlisted(!isWishlisted)}
-          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-lg"
+        <AnimatedTooltip
+          content={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          position="left"
         >
-          {isWishlisted ? (
-            <HeartSolidIcon className="h-5 w-5 text-red-500" />
-          ) : (
-            <HeartIcon className="h-5 w-5 text-gray-400 hover:text-red-500" />
-          )}
-        </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.85 }}
+            onClick={() => setIsWishlisted(!isWishlisted)}
+            aria-label={
+              isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+            }
+            className="absolute top-3 right-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          >
+            <motion.div
+              initial={false}
+              animate={{
+                scale: isWishlisted ? [1, 1.3, 1] : 1,
+                rotate: isWishlisted ? [0, -10, 10, -10, 0] : 0,
+              }}
+              transition={{ duration: 0.5 }}
+            >
+              {isWishlisted ? (
+                <HeartSolidIcon className="h-5 w-5 text-red-500" />
+              ) : (
+                <HeartIcon className="h-5 w-5 text-gray-400 hover:text-red-500" />
+              )}
+            </motion.div>
+          </motion.button>
+        </AnimatedTooltip>
 
         {/* Quick Actions Overlay */}
         <motion.div
           variants={overlayVariants}
           initial="hidden"
           animate={isHovered ? "visible" : "hidden"}
-          className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center"
+          className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-center justify-center"
         >
-          <div className="flex space-x-2">
+          <div className="flex space-x-3">
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.1 }}
+              animate={
+                isHovered ? { scale: 1, rotate: 0 } : { scale: 0, rotate: -180 }
+              }
+              transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
             >
-              <Button size="sm" className="shadow-lg" onClick={handleAddToCart}>
-                <ShoppingCartIcon className="h-4 w-4 mr-1" />
-                Add to Cart
-              </Button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleAddToCart}
+                disabled={isAddingToCart || !product.inStock}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isAddingToCart ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                    />
+                    <span className="text-sm font-medium">Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCartIcon className="h-4 w-4" />
+                    <span className="text-sm font-medium">Add to Cart</span>
+                  </>
+                )}
+              </motion.button>
             </motion.div>
             <motion.div
               initial={{ scale: 0, rotate: 180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.2 }}
+              animate={
+                isHovered ? { scale: 1, rotate: 0 } : { scale: 0, rotate: 180 }
+              }
+              transition={{ delay: 0.15, type: "spring", stiffness: 200 }}
             >
               <Link href={`/product/${product.id}`}>
-                <Button variant="secondary" size="sm" className="shadow-lg">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-800 px-4 py-2 rounded-lg shadow-lg text-sm font-medium transition-colors"
+                >
                   Quick View
-                </Button>
+                </motion.button>
               </Link>
             </motion.div>
           </div>
