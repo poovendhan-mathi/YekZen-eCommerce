@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import ProductCard from "../components/cards/ProductCard";
-import { CartContext } from "../contexts/CartContext";
+import CartContext from "../contexts/CartContext";
 
 // Mock Next.js modules
 jest.mock("next/navigation", () => ({
@@ -79,11 +79,18 @@ describe("ProductCard - Enhanced Features", () => {
   beforeEach(() => {
     mockAddToCart = jest.fn();
     mockCartValue = {
-      cart: { items: [] },
+      items: [],
       addToCart: mockAddToCart,
       removeFromCart: jest.fn(),
       updateQuantity: jest.fn(),
       clearCart: jest.fn(),
+      getTotal: jest.fn(() => 0),
+      getSubtotal: jest.fn(() => 0),
+      getTax: jest.fn(() => 0),
+      getShipping: jest.fn(() => 0),
+      getItemCount: jest.fn(() => 0),
+      isInCart: jest.fn(() => false),
+      getItemQuantity: jest.fn(() => 0),
     };
   });
 

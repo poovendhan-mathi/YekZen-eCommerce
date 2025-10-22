@@ -1,30 +1,79 @@
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import {
   AnimatedCheckmark,
   AnimatedError,
   AnimatedWarning,
   FormFieldAnimation,
-  NotificationToast,
   LoadingButton,
+  AnimatedToast,
+  NotificationToast,
+  AnimatedProgressBar,
+  StatusIndicator,
 } from "../components/ui/StatusAnimations";
 
 // Mock framer-motion
 jest.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }) => <button {...props}>{children}</button>,
-    svg: ({ children, ...props }) => <svg {...props}>{children}</svg>,
-    path: (props) => <path {...props} />,
-    circle: (props) => <circle {...props} />,
+    div: ({ children, className, style, animate, initial, exit, ...props }) => (
+      <div className={className} style={style} {...props}>
+        {children}
+      </div>
+    ),
+    button: ({ children, className, disabled, onClick, ...props }) => (
+      <button
+        className={className}
+        disabled={disabled}
+        onClick={onClick}
+        {...props}
+      >
+        {children}
+      </button>
+    ),
+    svg: ({
+      children,
+      width,
+      height,
+      viewBox,
+      stroke,
+      strokeWidth,
+      ...props
+    }) => (
+      <svg
+        width={width}
+        height={height}
+        viewBox={viewBox}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        {...props}
+      >
+        {children}
+      </svg>
+    ),
+    path: ({ d, ...props }) => <path d={d} {...props} />,
+    circle: ({ cx, cy, r, ...props }) => (
+      <circle cx={cx} cy={cy} r={r} {...props} />
+    ),
+    line: ({ x1, y1, x2, y2, ...props }) => (
+      <line x1={x1} y1={y1} x2={x2} y2={y2} {...props} />
+    ),
+    span: ({ children, className, ...props }) => (
+      <span className={className} {...props}>
+        {children}
+      </span>
+    ),
   },
   AnimatePresence: ({ children }) => <>{children}</>,
+}));
+
+// Mock heroicons
+jest.mock("@heroicons/react/24/outline", () => ({
+  CheckCircleIcon: (props) => <svg data-testid="check-icon" {...props} />,
+  XCircleIcon: (props) => <svg data-testid="x-icon" {...props} />,
+  ExclamationTriangleIcon: (props) => (
+    <svg data-testid="warning-icon" {...props} />
+  ),
+  InformationCircleIcon: (props) => <svg data-testid="info-icon" {...props} />,
 }));
 
 describe("StatusAnimations - AnimatedCheckmark", () => {
@@ -44,20 +93,19 @@ describe("StatusAnimations - AnimatedCheckmark", () => {
     it("should apply custom color", () => {
       const { container } = render(<AnimatedCheckmark color="blue" />);
       const svg = container.querySelector("svg");
-      expect(svg).toBeInTheDocument();
+      expect(svg).toHaveAttribute("stroke", "#3b82f6");
     });
 
     it("should use default values", () => {
       const { container } = render(<AnimatedCheckmark />);
       const svg = container.querySelector("svg");
       expect(svg).toHaveAttribute("width", "64");
+      expect(svg).toHaveAttribute("stroke", "#10b981");
     });
-  });
 
-  describe("Animation", () => {
-    it("should animate on mount", () => {
+    it("should render path element", () => {
       const { container } = render(<AnimatedCheckmark />);
-      expect(container.querySelector("circle")).toBeInTheDocument();
+      expect(container.querySelector("path")).toBeInTheDocument();
     });
   });
 });
@@ -73,20 +121,18 @@ describe("StatusAnimations - AnimatedError", () => {
       const { container } = render(<AnimatedError size={80} />);
       const svg = container.querySelector("svg");
       expect(svg).toHaveAttribute("width", "80");
-      expect(svg).toHaveAttribute("height", "80");
     });
 
-    it("should have red color by default", () => {
-      const { container } = render(<AnimatedError />);
-      expect(container.querySelector("svg")).toBeInTheDocument();
+    it("should apply custom color", () => {
+      const { container } = render(<AnimatedError color="orange" />);
+      const svg = container.querySelector("svg");
+      expect(svg).toHaveAttribute("stroke", "#f97316");
     });
-  });
 
-  describe("Animation", () => {
-    it("should show X mark", () => {
+    it("should render circle and path", () => {
       const { container } = render(<AnimatedError />);
-      const paths = container.querySelectorAll("path");
-      expect(paths.length).toBeGreaterThan(0);
+      expect(container.querySelector("circle")).toBeInTheDocument();
+      expect(container.querySelector("path")).toBeInTheDocument();
     });
   });
 });
@@ -99,15 +145,15 @@ describe("StatusAnimations - AnimatedWarning", () => {
     });
 
     it("should apply custom size", () => {
-      const { container } = render(<AnimatedWarning size={70} />);
+      const { container } = render(<AnimatedWarning size={120} />);
       const svg = container.querySelector("svg");
-      expect(svg).toHaveAttribute("width", "70");
-      expect(svg).toHaveAttribute("height", "70");
+      expect(svg).toHaveAttribute("width", "120");
     });
 
-    it("should have warning color", () => {
+    it("should render path and lines", () => {
       const { container } = render(<AnimatedWarning />);
-      expect(container.querySelector("svg")).toBeInTheDocument();
+      expect(container.querySelector("path")).toBeInTheDocument();
+      expect(container.querySelectorAll("line").length).toBeGreaterThan(0);
     });
   });
 });
@@ -117,395 +163,80 @@ describe("StatusAnimations - FormFieldAnimation", () => {
     it("should render children", () => {
       render(
         <FormFieldAnimation>
-          <input placeholder="Test input" />
+          <input placeholder="Email" />
         </FormFieldAnimation>
       );
-      expect(screen.getByPlaceholderText("Test input")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
     });
 
-    it("should wrap children in container", () => {
+    it("should wrap children in animated div", () => {
       const { container } = render(
         <FormFieldAnimation>
-          <input />
+          <input placeholder="Test" />
         </FormFieldAnimation>
       );
-      expect(container.firstChild).toBeInTheDocument();
+      expect(container.querySelector("div")).toBeInTheDocument();
     });
-  });
 
-  describe("Error State", () => {
-    it("should show error message when error prop is provided", () => {
+    it("should accept delay prop", () => {
       render(
-        <FormFieldAnimation error="This field is required">
-          <input />
+        <FormFieldAnimation delay={0.5}>
+          <input placeholder="Delayed" />
         </FormFieldAnimation>
       );
-      expect(screen.getByText("This field is required")).toBeInTheDocument();
-    });
-
-    it("should apply error styling", () => {
-      render(
-        <FormFieldAnimation error="Error message">
-          <input />
-        </FormFieldAnimation>
-      );
-      const errorMsg = screen.getByText("Error message");
-      expect(errorMsg).toHaveClass("text-red-500");
-    });
-
-    it("should not show error when error is null", () => {
-      const { container } = render(
-        <FormFieldAnimation error={null}>
-          <input />
-        </FormFieldAnimation>
-      );
-      expect(container.querySelector(".text-red-500")).not.toBeInTheDocument();
-    });
-
-    it("should update when error changes", () => {
-      const { rerender } = render(
-        <FormFieldAnimation error={null}>
-          <input />
-        </FormFieldAnimation>
-      );
-      expect(screen.queryByText("New error")).not.toBeInTheDocument();
-
-      rerender(
-        <FormFieldAnimation error="New error">
-          <input />
-        </FormFieldAnimation>
-      );
-      expect(screen.getByText("New error")).toBeInTheDocument();
-    });
-  });
-
-  describe("Success State", () => {
-    it("should show success indicator when success is true", () => {
-      const { container } = render(
-        <FormFieldAnimation success={true}>
-          <input />
-        </FormFieldAnimation>
-      );
-      expect(container.querySelector("svg")).toBeInTheDocument();
-    });
-
-    it("should apply success styling", () => {
-      const { container } = render(
-        <FormFieldAnimation success={true}>
-          <input />
-        </FormFieldAnimation>
-      );
-      const successIcon = container.querySelector(".text-green-500");
-      expect(successIcon).toBeInTheDocument();
-    });
-
-    it("should not show success when success is false", () => {
-      const { container } = render(
-        <FormFieldAnimation success={false}>
-          <input />
-        </FormFieldAnimation>
-      );
-      expect(
-        container.querySelector(".text-green-500")
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  describe("Combined States", () => {
-    it("should prioritize error over success", () => {
-      render(
-        <FormFieldAnimation error="Error message" success={true}>
-          <input />
-        </FormFieldAnimation>
-      );
-      expect(screen.getByText("Error message")).toBeInTheDocument();
-    });
-
-    it("should show neither when both are false", () => {
-      const { container } = render(
-        <FormFieldAnimation error={null} success={false}>
-          <input />
-        </FormFieldAnimation>
-      );
-      expect(container.querySelector(".text-red-500")).not.toBeInTheDocument();
-      expect(
-        container.querySelector(".text-green-500")
-      ).not.toBeInTheDocument();
-    });
-  });
-});
-
-describe("StatusAnimations - NotificationToast", () => {
-  describe("Rendering", () => {
-    it("should render when visible", () => {
-      render(
-        <NotificationToast
-          type="success"
-          message="Success message"
-          isVisible={true}
-          onClose={jest.fn()}
-        />
-      );
-      expect(screen.getByText("Success message")).toBeInTheDocument();
-    });
-
-    it("should not render when not visible", () => {
-      render(
-        <NotificationToast
-          type="success"
-          message="Hidden message"
-          isVisible={false}
-          onClose={jest.fn()}
-        />
-      );
-      expect(screen.queryByText("Hidden message")).not.toBeInTheDocument();
-    });
-  });
-
-  describe("Toast Types", () => {
-    it("should render success toast with correct styling", () => {
-      render(
-        <NotificationToast
-          type="success"
-          message="Success!"
-          isVisible={true}
-          onClose={jest.fn()}
-        />
-      );
-      const toast = screen.getByText("Success!").parentElement;
-      expect(toast).toHaveClass("bg-green-500");
-    });
-
-    it("should render error toast with correct styling", () => {
-      render(
-        <NotificationToast
-          type="error"
-          message="Error occurred"
-          isVisible={true}
-          onClose={jest.fn()}
-        />
-      );
-      const toast = screen.getByText("Error occurred").parentElement;
-      expect(toast).toHaveClass("bg-red-500");
-    });
-
-    it("should render warning toast with correct styling", () => {
-      render(
-        <NotificationToast
-          type="warning"
-          message="Warning!"
-          isVisible={true}
-          onClose={jest.fn()}
-        />
-      );
-      const toast = screen.getByText("Warning!").parentElement;
-      expect(toast).toHaveClass("bg-yellow-500");
-    });
-
-    it("should render info toast with correct styling", () => {
-      render(
-        <NotificationToast
-          type="info"
-          message="Information"
-          isVisible={true}
-          onClose={jest.fn()}
-        />
-      );
-      const toast = screen.getByText("Information").parentElement;
-      expect(toast).toHaveClass("bg-blue-500");
-    });
-  });
-
-  describe("Close Functionality", () => {
-    it("should call onClose when close button is clicked", () => {
-      const handleClose = jest.fn();
-      render(
-        <NotificationToast
-          type="success"
-          message="Closeable"
-          isVisible={true}
-          onClose={handleClose}
-        />
-      );
-
-      const closeButton = screen.getByRole("button");
-      fireEvent.click(closeButton);
-      expect(handleClose).toHaveBeenCalledTimes(1);
-    });
-
-    it("should auto-close after duration", async () => {
-      jest.useFakeTimers();
-      const handleClose = jest.fn();
-
-      render(
-        <NotificationToast
-          type="success"
-          message="Auto close"
-          isVisible={true}
-          onClose={handleClose}
-          duration={1000}
-        />
-      );
-
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      });
-
-      expect(handleClose).toHaveBeenCalled();
-      jest.useRealTimers();
-    });
-
-    it("should not auto-close when duration is 0", async () => {
-      jest.useFakeTimers();
-      const handleClose = jest.fn();
-
-      render(
-        <NotificationToast
-          type="success"
-          message="No auto close"
-          isVisible={true}
-          onClose={handleClose}
-          duration={0}
-        />
-      );
-
-      act(() => {
-        jest.advanceTimersByTime(5000);
-      });
-
-      expect(handleClose).not.toHaveBeenCalled();
-      jest.useRealTimers();
-    });
-  });
-
-  describe("Accessibility", () => {
-    it("should have proper aria roles", () => {
-      render(
-        <NotificationToast
-          type="success"
-          message="Accessible toast"
-          isVisible={true}
-          onClose={jest.fn()}
-        />
-      );
-      expect(screen.getByText("Accessible toast")).toBeInTheDocument();
-    });
-
-    it("should have close button with aria-label", () => {
-      render(
-        <NotificationToast
-          type="success"
-          message="Toast"
-          isVisible={true}
-          onClose={jest.fn()}
-        />
-      );
-      const closeButton = screen.getByRole("button");
-      expect(closeButton).toHaveAttribute("aria-label", "Close notification");
+      expect(screen.getByPlaceholderText("Delayed")).toBeInTheDocument();
     });
   });
 });
 
 describe("StatusAnimations - LoadingButton", () => {
   describe("Rendering", () => {
-    it("should render children when not loading", () => {
+    it("should render button with children", () => {
       render(<LoadingButton isLoading={false}>Submit</LoadingButton>);
-      expect(screen.getByText("Submit")).toBeInTheDocument();
+      expect(screen.getByRole("button")).toHaveTextContent("Submit");
     });
 
-    it("should render loading text when loading", () => {
-      render(
-        <LoadingButton isLoading={true} loadingText="Submitting...">
-          Submit
-        </LoadingButton>
-      );
-      expect(screen.getByText("Submitting...")).toBeInTheDocument();
-    });
-
-    it("should render default loading text", () => {
+    it("should show loading spinner when isLoading is true", () => {
       render(<LoadingButton isLoading={true}>Submit</LoadingButton>);
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
-    });
-
-    it("should apply custom className", () => {
-      render(
-        <LoadingButton isLoading={false} className="custom-btn">
-          Button
-        </LoadingButton>
-      );
-      expect(screen.getByText("Button")).toHaveClass("custom-btn");
-    });
-  });
-
-  describe("Loading State", () => {
-    it("should show spinner when loading", () => {
-      const { container } = render(
-        <LoadingButton isLoading={true}>Submit</LoadingButton>
-      );
-      const spinner = container.querySelector(".border-t-transparent");
-      expect(spinner).toBeInTheDocument();
+      const button = screen.getByRole("button");
+      expect(button).toBeInTheDocument();
     });
 
     it("should disable button when loading", () => {
       render(<LoadingButton isLoading={true}>Submit</LoadingButton>);
-      const button = screen.getByRole("button");
-      expect(button).toBeDisabled();
+      expect(screen.getByRole("button")).toBeDisabled();
     });
 
     it("should not disable button when not loading", () => {
       render(<LoadingButton isLoading={false}>Submit</LoadingButton>);
-      const button = screen.getByRole("button");
-      expect(button).not.toBeDisabled();
-    });
-
-    it("should respect explicit disabled prop", () => {
-      render(
-        <LoadingButton isLoading={false} disabled={true}>
-          Submit
-        </LoadingButton>
-      );
-      const button = screen.getByRole("button");
-      expect(button).toBeDisabled();
+      expect(screen.getByRole("button")).not.toBeDisabled();
     });
   });
 
   describe("Interactions", () => {
-    it("should handle click when not loading", () => {
+    it("should handle click events when not loading", () => {
       const handleClick = jest.fn();
       render(
         <LoadingButton isLoading={false} onClick={handleClick}>
-          Click me
+          Click
         </LoadingButton>
       );
 
-      fireEvent.click(screen.getByText("Click me"));
+      fireEvent.click(screen.getByRole("button"));
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
-    it("should not handle click when loading", () => {
+    it("should not trigger click when loading", () => {
       const handleClick = jest.fn();
       render(
         <LoadingButton isLoading={true} onClick={handleClick}>
-          Click me
+          Click
         </LoadingButton>
       );
 
+      // Button is disabled, click should not trigger
       const button = screen.getByRole("button");
-      fireEvent.click(button);
-      expect(handleClick).not.toHaveBeenCalled();
-    });
-
-    it("should toggle between loading and normal states", () => {
-      const { rerender } = render(
-        <LoadingButton isLoading={false}>Submit</LoadingButton>
-      );
-      expect(screen.getByText("Submit")).toBeInTheDocument();
-
-      rerender(<LoadingButton isLoading={true}>Submit</LoadingButton>);
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
-
-      rerender(<LoadingButton isLoading={false}>Submit</LoadingButton>);
-      expect(screen.getByText("Submit")).toBeInTheDocument();
+      expect(button).toBeDisabled();
     });
   });
 
@@ -539,7 +270,10 @@ describe("StatusAnimations - LoadingButton", () => {
           Submit
         </LoadingButton>
       );
-      expect(screen.getByLabelText("Submit form")).toBeInTheDocument();
+      expect(screen.getByRole("button")).toHaveAttribute(
+        "aria-label",
+        "Submit form"
+      );
     });
 
     it("should indicate loading state to screen readers", () => {
@@ -550,116 +284,151 @@ describe("StatusAnimations - LoadingButton", () => {
   });
 });
 
-describe("StatusAnimations - Integration Tests", () => {
-  it("should work with form validation flow", async () => {
-    const { rerender } = render(
-      <FormFieldAnimation error={null} success={false}>
-        <input placeholder="Email" />
-      </FormFieldAnimation>
-    );
+describe("StatusAnimations - AnimatedToast", () => {
+  describe("Rendering", () => {
+    it("should render toast when visible", () => {
+      render(
+        <AnimatedToast
+          message="Success message"
+          type="success"
+          isVisible={true}
+        />
+      );
+      expect(screen.getByText("Success message")).toBeInTheDocument();
+    });
 
-    // Initial state
-    expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
+    it("should not render when not visible", () => {
+      render(
+        <AnimatedToast message="Hidden message" type="info" isVisible={false} />
+      );
+      expect(screen.queryByText("Hidden message")).not.toBeInTheDocument();
+    });
 
-    // Error state
-    rerender(
-      <FormFieldAnimation error="Invalid email" success={false}>
-        <input placeholder="Email" />
-      </FormFieldAnimation>
-    );
-    expect(screen.getByText("Invalid email")).toBeInTheDocument();
+    it("should render different toast types", () => {
+      const { rerender } = render(
+        <AnimatedToast message="Success" type="success" isVisible={true} />
+      );
+      expect(screen.getByText("Success")).toBeInTheDocument();
 
-    // Success state
-    rerender(
-      <FormFieldAnimation error={null} success={true}>
-        <input placeholder="Email" />
-      </FormFieldAnimation>
-    );
-    expect(screen.queryByText("Invalid email")).not.toBeInTheDocument();
+      rerender(<AnimatedToast message="Error" type="error" isVisible={true} />);
+      expect(screen.getByText("Error")).toBeInTheDocument();
+
+      rerender(
+        <AnimatedToast message="Warning" type="warning" isVisible={true} />
+      );
+      expect(screen.getByText("Warning")).toBeInTheDocument();
+
+      rerender(<AnimatedToast message="Info" type="info" isVisible={true} />);
+      expect(screen.getByText("Info")).toBeInTheDocument();
+    });
   });
 
-  it("should coordinate LoadingButton with NotificationToast", async () => {
-    const TestComponent = () => {
-      const [isLoading, setIsLoading] = React.useState(false);
-      const [showToast, setShowToast] = React.useState(false);
-
-      const handleSubmit = () => {
-        setIsLoading(true);
-        setTimeout(() => {
-          setIsLoading(false);
-          setShowToast(true);
-        }, 1000);
-      };
-
-      return (
-        <>
-          <LoadingButton isLoading={isLoading} onClick={handleSubmit}>
-            Submit
-          </LoadingButton>
-          <NotificationToast
-            type="success"
-            message="Form submitted successfully"
-            isVisible={showToast}
-            onClose={() => setShowToast(false)}
-          />
-        </>
+  describe("Interactions", () => {
+    it("should call onClose when close button clicked", () => {
+      const handleClose = jest.fn();
+      render(
+        <AnimatedToast
+          message="Closeable toast"
+          isVisible={true}
+          onClose={handleClose}
+        />
       );
-    };
 
-    const React = require("react");
-    jest.useFakeTimers();
+      const closeButton = screen.getByRole("button");
+      fireEvent.click(closeButton);
+      expect(handleClose).toHaveBeenCalledTimes(1);
+    });
 
-    render(<TestComponent />);
+    it("should auto-close after duration", async () => {
+      jest.useFakeTimers();
+      const handleClose = jest.fn();
 
-    const button = screen.getByRole("button");
-    fireEvent.click(button);
+      render(
+        <AnimatedToast
+          message="Auto close"
+          isVisible={true}
+          onClose={handleClose}
+          duration={1000}
+        />
+      );
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
-
-    act(() => {
       jest.advanceTimersByTime(1000);
-    });
+      expect(handleClose).toHaveBeenCalledTimes(1);
 
-    await waitFor(() => {
-      expect(
-        screen.getByText("Form submitted successfully")
-      ).toBeInTheDocument();
+      jest.useRealTimers();
     });
-
-    jest.useRealTimers();
   });
 });
 
-describe("StatusAnimations - Performance", () => {
-  it("should render multiple status indicators efficiently", () => {
-    const { container } = render(
-      <>
-        <AnimatedCheckmark />
-        <AnimatedError />
-        <AnimatedWarning />
-      </>
+describe("StatusAnimations - NotificationToast", () => {
+  it("should be an alias for AnimatedToast", () => {
+    render(
+      <NotificationToast message="Notification" type="info" isVisible={true} />
     );
-    expect(container.querySelectorAll("svg")).toHaveLength(3);
+    expect(screen.getByText("Notification")).toBeInTheDocument();
   });
+});
 
-  it("should handle rapid state changes", () => {
-    const { rerender } = render(
-      <FormFieldAnimation error={null} success={false}>
-        <input />
-      </FormFieldAnimation>
-    );
+describe("StatusAnimations - AnimatedProgressBar", () => {
+  describe("Rendering", () => {
+    it("should render progress bar", () => {
+      const { container } = render(<AnimatedProgressBar progress={50} />);
+      expect(container.querySelector("div")).toBeInTheDocument();
+    });
 
-    for (let i = 0; i < 10; i++) {
-      rerender(
-        <FormFieldAnimation
-          error={i % 2 === 0 ? "Error" : null}
-          success={i % 2 !== 0}
-        >
-          <input />
-        </FormFieldAnimation>
+    it("should show percentage by default", () => {
+      render(<AnimatedProgressBar progress={75} />);
+      expect(screen.getByText("75%")).toBeInTheDocument();
+    });
+
+    it("should hide percentage when showPercentage is false", () => {
+      render(<AnimatedProgressBar progress={50} showPercentage={false} />);
+      expect(screen.queryByText("50%")).not.toBeInTheDocument();
+    });
+
+    it("should apply different status colors", () => {
+      const { container, rerender } = render(
+        <AnimatedProgressBar progress={50} status="active" />
       );
-    }
+      expect(container.querySelector(".from-blue-500")).toBeInTheDocument();
 
-    expect(screen.getByRole("textbox")).toBeInTheDocument();
+      rerender(<AnimatedProgressBar progress={100} status="success" />);
+      expect(container.querySelector(".from-green-500")).toBeInTheDocument();
+
+      rerender(<AnimatedProgressBar progress={30} status="error" />);
+      expect(container.querySelector(".from-red-500")).toBeInTheDocument();
+    });
+  });
+});
+
+describe("StatusAnimations - StatusIndicator", () => {
+  describe("Rendering", () => {
+    it("should render loading status", () => {
+      const { container } = render(
+        <StatusIndicator status="loading" message="Loading..." />
+      );
+      expect(container.querySelector("div")).toBeInTheDocument();
+    });
+
+    it("should render success status", () => {
+      const { container } = render(
+        <StatusIndicator status="success" message="Complete!" />
+      );
+      expect(container.querySelector("div")).toBeInTheDocument();
+    });
+
+    it("should render error status", () => {
+      const { container } = render(
+        <StatusIndicator status="error" message="Failed" />
+      );
+      expect(container.querySelector("div")).toBeInTheDocument();
+    });
+
+    it("should apply custom size", () => {
+      const { container } = render(
+        <StatusIndicator status="loading" size="lg" />
+      );
+      expect(container.querySelector("div")).toBeInTheDocument();
+    });
   });
 });

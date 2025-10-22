@@ -289,67 +289,190 @@ export const AnimatedToast = ({
 };
 
 // Checkmark animation
-export const AnimatedCheckmark = ({
-  isVisible = false,
-  size = "md",
-  color = "green",
-}) => {
-  const sizes = {
-    sm: "w-8 h-8",
-    md: "w-12 h-12",
-    lg: "w-16 h-16",
-    xl: "w-24 h-24",
-  };
-
-  const colors = {
-    green: "text-green-500",
-    blue: "text-blue-500",
-    purple: "text-purple-500",
+export const AnimatedCheckmark = ({ size = 64, color = "green" }) => {
+  const colorMap = {
+    green: "#10b981",
+    blue: "#3b82f6",
+    purple: "#8b5cf6",
+    red: "#ef4444",
   };
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 30,
-          }}
-          className={`${sizes[size]} ${colors[color]} mx-auto`}
-        >
-          <motion.svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <motion.path
-              d="M20 6 9 17l-5-5"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{
-                duration: 0.6,
-                delay: 0.2,
-                ease: "easeInOut",
-              }}
-            />
-          </motion.svg>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <motion.svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={colorMap[color] || colorMap.green}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{
+        type: "spring",
+        stiffness: 500,
+        damping: 30,
+      }}
+    >
+      <motion.path
+        d="M20 6 9 17l-5-5"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{
+          duration: 0.6,
+          delay: 0.2,
+          ease: "easeInOut",
+        }}
+      />
+    </motion.svg>
   );
 };
+
+// Error animation
+export const AnimatedError = ({ size = 64, color = "red" }) => {
+  const colorMap = {
+    red: "#ef4444",
+    orange: "#f97316",
+  };
+
+  return (
+    <motion.svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={colorMap[color] || colorMap.red}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      initial={{ scale: 0, opacity: 0, rotate: -180 }}
+      animate={{ scale: 1, opacity: 1, rotate: 0 }}
+      transition={{
+        type: "spring",
+        stiffness: 500,
+        damping: 30,
+      }}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <motion.path
+        d="M15 9l-6 6m0-6l6 6"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{
+          duration: 0.6,
+          delay: 0.2,
+          ease: "easeInOut",
+        }}
+      />
+    </motion.svg>
+  );
+};
+
+// Warning animation
+export const AnimatedWarning = ({ size = 64, color = "yellow" }) => {
+  const colorMap = {
+    yellow: "#eab308",
+    orange: "#f97316",
+  };
+
+  return (
+    <motion.svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={colorMap[color] || colorMap.yellow}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{
+        type: "spring",
+        stiffness: 500,
+        damping: 30,
+      }}
+    >
+      <motion.path
+        d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{
+          duration: 0.6,
+          ease: "easeInOut",
+        }}
+      />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </motion.svg>
+  );
+};
+
+// Form field animation wrapper
+export const FormFieldAnimation = ({ children, delay = 0 }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Loading button component
+export const LoadingButton = ({
+  loading = false,
+  children,
+  className = "",
+  ...props
+}) => {
+  return (
+    <button className={`relative ${className}`} disabled={loading} {...props}>
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center justify-center"
+          >
+            <motion.div
+              className="w-5 h-5 border-2 border-current border-t-transparent rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+          </motion.div>
+        ) : (
+          <motion.span
+            key="content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {children}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </button>
+  );
+};
+
+// Notification Toast (alias for AnimatedToast)
+export const NotificationToast = AnimatedToast;
 
 export default {
   StatusIndicator,
   ConfettiAnimation,
   AnimatedProgressBar,
   AnimatedToast,
+  NotificationToast,
   AnimatedCheckmark,
+  AnimatedError,
+  AnimatedWarning,
+  FormFieldAnimation,
+  LoadingButton,
 };

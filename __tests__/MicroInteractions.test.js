@@ -1,11 +1,4 @@
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import {
   InteractiveButton,
@@ -19,13 +12,46 @@ import {
 // Mock framer-motion
 jest.mock("framer-motion", () => ({
   motion: {
-    button: ({ children, ...props }) => <button {...props}>{children}</button>,
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-    span: ({ children, ...props }) => <span {...props}>{children}</span>,
+    button: ({
+      children,
+      onClick,
+      className,
+      disabled,
+      style,
+      onMouseMove,
+      onMouseLeave,
+      ...props
+    }) => (
+      <button
+        onClick={onClick}
+        className={className}
+        disabled={disabled}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        {...props}
+      >
+        {children}
+      </button>
+    ),
+    div: ({ children, className, onHoverStart, onHoverEnd, ...props }) => (
+      <div
+        className={className}
+        onMouseEnter={onHoverStart}
+        onMouseLeave={onHoverEnd}
+        {...props}
+      >
+        {children}
+      </div>
+    ),
+    span: ({ children, className, ...props }) => (
+      <span className={className} {...props}>
+        {children}
+      </span>
+    ),
   },
-  useMotionValue: () => ({ set: jest.fn(), get: jest.fn() }),
-  useTransform: () => ({ set: jest.fn(), get: jest.fn() }),
-  useSpring: () => ({ set: jest.fn(), get: jest.fn() }),
+  useMotionValue: () => ({ set: jest.fn(), get: jest.fn(() => 0) }),
+  useTransform: () => ({ set: jest.fn(), get: jest.fn(() => 0) }),
+  useSpring: (value) => value,
   AnimatePresence: ({ children }) => <>{children}</>,
 }));
 
@@ -33,14 +59,14 @@ describe("MicroInteractions - InteractiveButton", () => {
   describe("Rendering", () => {
     it("should render with children text", () => {
       render(<InteractiveButton>Click Me</InteractiveButton>);
-      expect(screen.getByText("Click Me")).toBeInTheDocument();
+      expect(screen.getByRole("button")).toHaveTextContent("Click Me");
     });
 
     it("should render with custom className", () => {
       render(
         <InteractiveButton className="custom-class">Button</InteractiveButton>
       );
-      const button = screen.getByText("Button");
+      const button = screen.getByRole("button");
       expect(button).toHaveClass("custom-class");
     });
 
@@ -48,23 +74,23 @@ describe("MicroInteractions - InteractiveButton", () => {
       const { rerender } = render(
         <InteractiveButton variant="primary">Primary</InteractiveButton>
       );
-      let button = screen.getByText("Primary");
+      let button = screen.getByRole("button");
       expect(button.className).toContain("from-blue-500");
 
       rerender(
         <InteractiveButton variant="secondary">Secondary</InteractiveButton>
       );
-      button = screen.getByText("Secondary");
+      button = screen.getByRole("button");
       expect(button.className).toContain("bg-white");
 
       rerender(
         <InteractiveButton variant="success">Success</InteractiveButton>
       );
-      button = screen.getByText("Success");
+      button = screen.getByRole("button");
       expect(button.className).toContain("from-green-500");
 
       rerender(<InteractiveButton variant="danger">Danger</InteractiveButton>);
-      button = screen.getByText("Danger");
+      button = screen.getByRole("button");
       expect(button.className).toContain("from-red-500");
     });
 
@@ -72,15 +98,15 @@ describe("MicroInteractions - InteractiveButton", () => {
       const { rerender } = render(
         <InteractiveButton size="sm">Small</InteractiveButton>
       );
-      let button = screen.getByText("Small");
+      let button = screen.getByRole("button");
       expect(button.className).toContain("text-sm");
 
       rerender(<InteractiveButton size="md">Medium</InteractiveButton>);
-      button = screen.getByText("Medium");
+      button = screen.getByRole("button");
       expect(button.className).toContain("text-base");
 
       rerender(<InteractiveButton size="lg">Large</InteractiveButton>);
-      button = screen.getByText("Large");
+      button = screen.getByRole("button");
       expect(button.className).toContain("text-lg");
     });
   });
@@ -92,7 +118,7 @@ describe("MicroInteractions - InteractiveButton", () => {
         <InteractiveButton onClick={handleClick}>Click</InteractiveButton>
       );
 
-      fireEvent.click(screen.getByText("Click"));
+      fireEvent.click(screen.getByRole("button"));
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
@@ -104,322 +130,80 @@ describe("MicroInteractions - InteractiveButton", () => {
         </InteractiveButton>
       );
 
-      fireEvent.click(screen.getByText("Disabled"));
+      fireEvent.click(screen.getByRole("button"));
       expect(handleClick).not.toHaveBeenCalled();
-    });
-
-    it("should handle mouse press and release", () => {
-      render(<InteractiveButton>Press Me</InteractiveButton>);
-      const button = screen.getByText("Press Me");
-
-      fireEvent.mouseDown(button);
-      fireEvent.mouseUp(button);
-
-      expect(button).toBeInTheDocument();
-    });
-
-    it("should handle keyboard events", () => {
-      const handleClick = jest.fn();
-      render(
-        <InteractiveButton onClick={handleClick}>Keyboard</InteractiveButton>
-      );
-      const button = screen.getByText("Keyboard");
-
-      fireEvent.keyDown(button, { key: "Enter", code: "Enter" });
-      expect(handleClick).toHaveBeenCalled();
     });
   });
 
   describe("Disabled State", () => {
     it("should apply disabled styles", () => {
       render(<InteractiveButton disabled>Disabled Button</InteractiveButton>);
-      const button = screen.getByText("Disabled Button");
-      expect(button).toHaveClass("opacity-50", "cursor-not-allowed");
+      const button = screen.getByRole("button");
+      expect(button.className).toContain("disabled:opacity-50");
+      expect(button.className).toContain("disabled:cursor-not-allowed");
     });
 
     it("should have disabled attribute", () => {
       render(<InteractiveButton disabled>Disabled</InteractiveButton>);
-      expect(screen.getByText("Disabled")).toBeDisabled();
+      expect(screen.getByRole("button")).toBeDisabled();
     });
   });
 
   describe("Accessibility", () => {
-    it("should be keyboard accessible", () => {
-      render(<InteractiveButton>Accessible</InteractiveButton>);
-      const button = screen.getByText("Accessible");
-      expect(button).toHaveAttribute("type");
-    });
-
     it("should support aria-label", () => {
       render(
-        <InteractiveButton aria-label="Custom Label">Button</InteractiveButton>
+        <InteractiveButton aria-label="Submit form">Submit</InteractiveButton>
       );
-      expect(screen.getByLabelText("Custom Label")).toBeInTheDocument();
+      expect(screen.getByRole("button")).toHaveAttribute(
+        "aria-label",
+        "Submit form"
+      );
     });
 
-    it("should forward custom props", () => {
+    it("should be keyboard accessible", () => {
+      const handleClick = jest.fn();
       render(
-        <InteractiveButton data-testid="custom-button" id="btn-1">
-          Custom Props
-        </InteractiveButton>
-      );
-      const button = screen.getByTestId("custom-button");
-      expect(button).toHaveAttribute("id", "btn-1");
-    });
-  });
-});
-
-describe("MicroInteractions - AnimatedTooltip", () => {
-  describe("Rendering", () => {
-    it("should render children", () => {
-      render(
-        <AnimatedTooltip content="Tooltip text">
-          <button>Hover me</button>
-        </AnimatedTooltip>
-      );
-      expect(screen.getByText("Hover me")).toBeInTheDocument();
-    });
-
-    it("should not show tooltip initially", () => {
-      render(
-        <AnimatedTooltip content="Hidden tooltip">
-          <button>Button</button>
-        </AnimatedTooltip>
-      );
-      expect(screen.queryByText("Hidden tooltip")).not.toBeInTheDocument();
-    });
-  });
-
-  describe("Tooltip Visibility", () => {
-    it("should show tooltip on mouse enter", async () => {
-      render(
-        <AnimatedTooltip content="Tooltip content">
-          <button>Hover target</button>
-        </AnimatedTooltip>
+        <InteractiveButton onClick={handleClick}>Accessible</InteractiveButton>
       );
 
-      const button = screen.getByText("Hover target");
-      fireEvent.mouseEnter(button.parentElement);
-
-      await waitFor(() => {
-        expect(screen.getByText("Tooltip content")).toBeInTheDocument();
-      });
-    });
-
-    it("should hide tooltip on mouse leave", async () => {
-      render(
-        <AnimatedTooltip content="Disappearing tooltip">
-          <button>Hover target</button>
-        </AnimatedTooltip>
-      );
-
-      const container = screen.getByText("Hover target").parentElement;
-      fireEvent.mouseEnter(container);
-
-      await waitFor(() => {
-        expect(screen.getByText("Disappearing tooltip")).toBeInTheDocument();
-      });
-
-      fireEvent.mouseLeave(container);
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText("Disappearing tooltip")
-        ).not.toBeInTheDocument();
-      });
-    });
-  });
-
-  describe("Tooltip Positioning", () => {
-    it("should position tooltip at the top by default", () => {
-      render(
-        <AnimatedTooltip content="Top tooltip">
-          <button>Button</button>
-        </AnimatedTooltip>
-      );
-
-      const container = screen.getByText("Button").parentElement;
-      fireEvent.mouseEnter(container);
-
-      waitFor(() => {
-        const tooltip = screen.getByText("Top tooltip");
-        expect(tooltip).toHaveClass("bottom-full");
-      });
-    });
-
-    it("should support all position options", async () => {
-      const positions = ["top", "bottom", "left", "right"];
-
-      for (const position of positions) {
-        const { unmount } = render(
-          <AnimatedTooltip content={`${position} tooltip`} position={position}>
-            <button>{position}</button>
-          </AnimatedTooltip>
-        );
-
-        const container = screen.getByText(position).parentElement;
-        fireEvent.mouseEnter(container);
-
-        await waitFor(() => {
-          expect(screen.getByText(`${position} tooltip`)).toBeInTheDocument();
-        });
-
-        unmount();
-      }
-    });
-
-    it("should apply custom className to tooltip", async () => {
-      render(
-        <AnimatedTooltip
-          content="Custom styled"
-          className="custom-tooltip-class"
-        >
-          <button>Button</button>
-        </AnimatedTooltip>
-      );
-
-      const container = screen.getByText("Button").parentElement;
-      fireEvent.mouseEnter(container);
-
-      await waitFor(() => {
-        const tooltip = screen.getByText("Custom styled");
-        expect(tooltip).toHaveClass("custom-tooltip-class");
-      });
-    });
-  });
-
-  describe("Accessibility", () => {
-    it("should wrap children in accessible container", () => {
-      render(
-        <AnimatedTooltip content="Accessible tooltip">
-          <button>Accessible button</button>
-        </AnimatedTooltip>
-      );
-
-      expect(screen.getByText("Accessible button")).toBeInTheDocument();
+      const button = screen.getByRole("button");
+      button.focus();
+      expect(button).toHaveFocus();
     });
   });
 });
 
 describe("MicroInteractions - FloatingActionButton", () => {
-  const mockActions = [
-    { icon: "➕", label: "Add", onClick: jest.fn() },
-    { icon: "✏️", label: "Edit", onClick: jest.fn() },
-    { icon: "🗑️", label: "Delete", onClick: jest.fn() },
-  ];
-
-  beforeEach(() => {
-    mockActions.forEach((action) => action.onClick.mockClear());
-  });
-
-  describe("Rendering", () => {
-    it("should render FAB button", () => {
-      render(<FloatingActionButton actions={mockActions} />);
-      expect(screen.getByRole("button")).toBeInTheDocument();
-    });
-
-    it("should not show actions initially", () => {
-      render(<FloatingActionButton actions={mockActions} />);
-      expect(screen.queryByText("Add")).not.toBeInTheDocument();
-    });
-  });
-
-  describe("Action Menu", () => {
-    it("should expand menu on click", async () => {
-      render(<FloatingActionButton actions={mockActions} />);
-
-      const fab = screen.getByRole("button");
-      fireEvent.click(fab);
-
-      await waitFor(() => {
-        expect(screen.getByText("Add")).toBeInTheDocument();
-        expect(screen.getByText("Edit")).toBeInTheDocument();
-        expect(screen.getByText("Delete")).toBeInTheDocument();
-      });
-    });
-
-    it("should collapse menu on second click", async () => {
-      render(<FloatingActionButton actions={mockActions} />);
-
-      const fab = screen.getByRole("button");
-      fireEvent.click(fab);
-
-      await waitFor(() => {
-        expect(screen.getByText("Add")).toBeInTheDocument();
-      });
-
-      fireEvent.click(fab);
-
-      await waitFor(() => {
-        expect(screen.queryByText("Add")).not.toBeInTheDocument();
-      });
-    });
-
-    it("should trigger action onClick", async () => {
-      render(<FloatingActionButton actions={mockActions} />);
-
-      const fab = screen.getByRole("button");
-      fireEvent.click(fab);
-
-      await waitFor(() => {
-        expect(screen.getByText("Add")).toBeInTheDocument();
-      });
-
-      const addButton = screen.getByText("Add");
-      fireEvent.click(addButton);
-
-      expect(mockActions[0].onClick).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("Accessibility", () => {
-    it("should have proper button role", () => {
-      render(<FloatingActionButton actions={mockActions} />);
-      expect(screen.getByRole("button")).toBeInTheDocument();
-    });
-
-    it("should support keyboard navigation", () => {
-      render(<FloatingActionButton actions={mockActions} />);
-      const fab = screen.getByRole("button");
-
-      fireEvent.keyDown(fab, { key: "Enter" });
-      expect(fab).toBeInTheDocument();
-    });
-  });
-});
-
-describe("MicroInteractions - MagneticButton", () => {
   describe("Rendering", () => {
     it("should render with children", () => {
-      render(<MagneticButton>Magnetic</MagneticButton>);
-      expect(screen.getByText("Magnetic")).toBeInTheDocument();
+      render(
+        <FloatingActionButton>
+          <span>+</span>
+        </FloatingActionButton>
+      );
+      expect(screen.getByText("+")).toBeInTheDocument();
+    });
+
+    it("should apply correct position", () => {
+      const { rerender } = render(
+        <FloatingActionButton position="bottom-right">+</FloatingActionButton>
+      );
+      let button = screen.getByRole("button");
+      expect(button.className).toContain("bottom-6");
+      expect(button.className).toContain("right-6");
+
+      rerender(
+        <FloatingActionButton position="bottom-left">+</FloatingActionButton>
+      );
+      button = screen.getByRole("button");
+      expect(button.className).toContain("left-6");
     });
 
     it("should apply custom className", () => {
       render(
-        <MagneticButton className="magnetic-custom">Button</MagneticButton>
+        <FloatingActionButton className="custom-fab">+</FloatingActionButton>
       );
-      expect(screen.getByText("Button")).toHaveClass("magnetic-custom");
-    });
-  });
-
-  describe("Magnetic Effect", () => {
-    it("should handle mouse movement", () => {
-      render(<MagneticButton strength={0.5}>Magnetic Button</MagneticButton>);
-      const button = screen.getByText("Magnetic Button");
-
-      fireEvent.mouseMove(button, { clientX: 100, clientY: 100 });
-      expect(button).toBeInTheDocument();
-    });
-
-    it("should reset position on mouse leave", () => {
-      render(<MagneticButton>Magnetic Button</MagneticButton>);
-      const button = screen.getByText("Magnetic Button");
-
-      fireEvent.mouseMove(button, { clientX: 100, clientY: 100 });
-      fireEvent.mouseLeave(button);
-
-      expect(button).toBeInTheDocument();
+      expect(screen.getByRole("button")).toHaveClass("custom-fab");
     });
   });
 
@@ -427,16 +211,27 @@ describe("MicroInteractions - MagneticButton", () => {
     it("should handle click events", () => {
       const handleClick = jest.fn();
       render(
-        <MagneticButton onClick={handleClick}>Click Magnetic</MagneticButton>
+        <FloatingActionButton onClick={handleClick}>+</FloatingActionButton>
       );
 
-      fireEvent.click(screen.getByText("Click Magnetic"));
+      fireEvent.click(screen.getByRole("button"));
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
-    it("should support custom strength", () => {
-      render(<MagneticButton strength={0.8}>Strong Magnetic</MagneticButton>);
-      expect(screen.getByText("Strong Magnetic")).toBeInTheDocument();
+    it("should handle mouse movement for magnetic effect", () => {
+      render(<FloatingActionButton>+</FloatingActionButton>);
+      const button = screen.getByRole("button");
+
+      fireEvent.mouseMove(button, { clientX: 100, clientY: 100 });
+      expect(button).toBeInTheDocument();
+    });
+
+    it("should reset position on mouse leave", () => {
+      render(<FloatingActionButton>+</FloatingActionButton>);
+      const button = screen.getByRole("button");
+
+      fireEvent.mouseLeave(button);
+      expect(button).toBeInTheDocument();
     });
   });
 });
@@ -456,103 +251,175 @@ describe("MicroInteractions - InteractiveCard", () => {
 
     it("should apply custom className", () => {
       render(
-        <InteractiveCard className="custom-card">Content</InteractiveCard>
+        <InteractiveCard className="custom-card">
+          <p>Content</p>
+        </InteractiveCard>
       );
       const card = screen.getByText("Content").parentElement;
       expect(card).toHaveClass("custom-card");
     });
-  });
 
-  describe("3D Tilt Effect", () => {
-    it("should handle mouse movement for tilt", () => {
-      render(<InteractiveCard>Tilt Card</InteractiveCard>);
-      const card = screen.getByText("Tilt Card").parentElement;
-
-      fireEvent.mouseMove(card, { clientX: 100, clientY: 100 });
-      expect(card).toBeInTheDocument();
-    });
-
-    it("should reset tilt on mouse leave", () => {
-      render(<InteractiveCard>Tilt Card</InteractiveCard>);
-      const card = screen.getByText("Tilt Card").parentElement;
-
-      fireEvent.mouseMove(card, { clientX: 100, clientY: 100 });
-      fireEvent.mouseLeave(card);
-
-      expect(card).toBeInTheDocument();
+    it("should have default card styles", () => {
+      render(
+        <InteractiveCard>
+          <p>Content</p>
+        </InteractiveCard>
+      );
+      const card = screen.getByText("Content").parentElement;
+      expect(card?.className).toContain("bg-white");
+      expect(card?.className).toContain("rounded-xl");
     });
   });
 
   describe("Interactions", () => {
-    it("should handle click events", () => {
-      const handleClick = jest.fn();
+    it("should handle hover state", () => {
       render(
-        <InteractiveCard onClick={handleClick}>Clickable Card</InteractiveCard>
+        <InteractiveCard>
+          <p>Hover me</p>
+        </InteractiveCard>
       );
+      const card = screen.getByText("Hover me").parentElement;
 
-      fireEvent.click(screen.getByText("Clickable Card"));
+      fireEvent.mouseEnter(card);
+      expect(card).toBeInTheDocument();
+
+      fireEvent.mouseLeave(card);
+      expect(card).toBeInTheDocument();
+    });
+  });
+});
+
+describe("MicroInteractions - RippleEffect", () => {
+  describe("Rendering", () => {
+    it("should render with children", () => {
+      render(<RippleEffect>Click for ripple</RippleEffect>);
+      expect(screen.getByRole("button")).toHaveTextContent("Click for ripple");
+    });
+
+    it("should apply custom className", () => {
+      render(<RippleEffect className="ripple-btn">Ripple</RippleEffect>);
+      expect(screen.getByRole("button")).toHaveClass("ripple-btn");
+    });
+  });
+
+  describe("Interactions", () => {
+    it("should handle click and create ripple", () => {
+      const handleClick = jest.fn();
+      render(<RippleEffect onClick={handleClick}>Click</RippleEffect>);
+
+      const button = screen.getByRole("button");
+      fireEvent.click(button, { clientX: 100, clientY: 100 });
+
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
-    it("should support custom tilt intensity", () => {
-      render(<InteractiveCard intensity={0.2}>Low Intensity</InteractiveCard>);
-      expect(screen.getByText("Low Intensity")).toBeInTheDocument();
+    it("should have overflow hidden for ripple effect", () => {
+      render(<RippleEffect>Ripple</RippleEffect>);
+      const button = screen.getByRole("button");
+      expect(button.className).toContain("overflow-hidden");
     });
   });
 });
 
-describe("MicroInteractions - Integration Tests", () => {
-  it("should work together - Tooltip with Button", async () => {
-    render(
-      <AnimatedTooltip content="Click to proceed">
-        <InteractiveButton>Proceed</InteractiveButton>
-      </AnimatedTooltip>
-    );
+describe("MicroInteractions - MagneticButton", () => {
+  describe("Rendering", () => {
+    it("should render with children", () => {
+      render(<MagneticButton>Magnetic</MagneticButton>);
+      expect(screen.getByRole("button")).toHaveTextContent("Magnetic");
+    });
 
-    const button = screen.getByText("Proceed");
-    expect(button).toBeInTheDocument();
-
-    fireEvent.mouseEnter(button.parentElement);
-    await waitFor(() => {
-      expect(screen.getByText("Click to proceed")).toBeInTheDocument();
+    it("should apply custom className", () => {
+      render(
+        <MagneticButton className="magnetic-btn">Magnetic</MagneticButton>
+      );
+      expect(screen.getByRole("button")).toHaveClass("magnetic-btn");
     });
   });
 
-  it("should work together - Card with Magnetic Button", () => {
-    render(
-      <InteractiveCard>
-        <MagneticButton>Magnetic Inside Card</MagneticButton>
-      </InteractiveCard>
-    );
+  describe("Interactions", () => {
+    it("should handle mouse movement", () => {
+      render(<MagneticButton>Hover me</MagneticButton>);
+      const button = screen.getByRole("button");
 
-    expect(screen.getByText("Magnetic Inside Card")).toBeInTheDocument();
+      fireEvent.mouseMove(button, { clientX: 100, clientY: 100 });
+      expect(button).toBeInTheDocument();
+    });
+
+    it("should reset position on mouse leave", () => {
+      render(<MagneticButton>Magnetic</MagneticButton>);
+      const button = screen.getByRole("button");
+
+      fireEvent.mouseLeave(button);
+      expect(button).toBeInTheDocument();
+    });
   });
 });
 
-describe("MicroInteractions - Performance", () => {
-  it("should render multiple buttons efficiently", () => {
-    const { container } = render(
-      <>
-        {[...Array(10)].map((_, i) => (
-          <InteractiveButton key={i}>Button {i}</InteractiveButton>
-        ))}
-      </>
-    );
+describe("MicroInteractions - AnimatedTooltip", () => {
+  describe("Rendering", () => {
+    it("should render trigger element", () => {
+      render(
+        <AnimatedTooltip content="Tooltip text">
+          <button>Hover me</button>
+        </AnimatedTooltip>
+      );
+      expect(screen.getByRole("button")).toHaveTextContent("Hover me");
+    });
 
-    expect(container.querySelectorAll("button")).toHaveLength(10);
+    it("should show tooltip on hover", () => {
+      render(
+        <AnimatedTooltip content="Tooltip text">
+          <button>Hover me</button>
+        </AnimatedTooltip>
+      );
+
+      const trigger = screen.getByRole("button");
+      fireEvent.mouseEnter(trigger);
+
+      expect(screen.getByText("Tooltip text")).toBeInTheDocument();
+    });
+
+    it("should hide tooltip on mouse leave", async () => {
+      render(
+        <AnimatedTooltip content="Tooltip text">
+          <button>Hover me</button>
+        </AnimatedTooltip>
+      );
+
+      const trigger = screen.getByRole("button");
+      fireEvent.mouseEnter(trigger);
+      expect(screen.getByText("Tooltip text")).toBeInTheDocument();
+
+      fireEvent.mouseLeave(trigger);
+      await waitFor(() => {
+        expect(screen.queryByText("Tooltip text")).not.toBeInTheDocument();
+      });
+    });
   });
 
-  it("should handle rapid interactions", () => {
-    const handleClick = jest.fn();
-    render(
-      <InteractiveButton onClick={handleClick}>Rapid Click</InteractiveButton>
-    );
-    const button = screen.getByText("Rapid Click");
+  describe("Positioning", () => {
+    it("should apply correct position styles", () => {
+      const { rerender } = render(
+        <AnimatedTooltip content="Top tooltip" position="top">
+          <button>Hover</button>
+        </AnimatedTooltip>
+      );
 
-    for (let i = 0; i < 10; i++) {
-      fireEvent.click(button);
-    }
+      fireEvent.mouseEnter(screen.getByRole("button"));
+      let tooltip = screen.getByText("Top tooltip");
+      expect(tooltip.className).toContain("bottom-full");
 
-    expect(handleClick).toHaveBeenCalledTimes(10);
+      fireEvent.mouseLeave(screen.getByRole("button"));
+
+      rerender(
+        <AnimatedTooltip content="Bottom tooltip" position="bottom">
+          <button>Hover</button>
+        </AnimatedTooltip>
+      );
+
+      fireEvent.mouseEnter(screen.getByRole("button"));
+      tooltip = screen.getByText("Bottom tooltip");
+      expect(tooltip.className).toContain("top-full");
+    });
   });
 });

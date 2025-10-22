@@ -447,12 +447,10 @@ Overall Progress: ████████████████▒▒▒▒ 8
 
 ### Next Week (Week 7)
 
-1. **Animations & Polish** (Phase 9)
-
-   - [ ] Page transition animations
-   - [ ] Loading states and skeletons
-   - [ ] Advanced micro-interactions
-   - [ ] Mobile gesture support
+- [ ] Page transition animations
+- [ ] Loading states and skeletons
+- [ ] Advanced micro-interactions
+- [ ] Mobile gesture support
 
 2. **Testing & Optimization** (Phase 10)
 

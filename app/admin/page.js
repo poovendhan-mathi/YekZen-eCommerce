@@ -371,6 +371,14 @@ export default function AdminDashboard() {
                 Quick Actions
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Button
+                  variant="outline"
+                  className="justify-center"
+                  onClick={() => router.push("/admin/products")}
+                >
+                  <PencilIcon className="w-5 h-5 mr-2" />
+                  Manage Products
+                </Button>
                 <Button variant="outline" className="justify-center">
                   <ShoppingBagIcon className="w-5 h-5 mr-2" />
                   View All Orders
@@ -378,10 +386,6 @@ export default function AdminDashboard() {
                 <Button variant="outline" className="justify-center">
                   <UserGroupIcon className="w-5 h-5 mr-2" />
                   Manage Customers
-                </Button>
-                <Button variant="outline" className="justify-center">
-                  <ChartBarIcon className="w-5 h-5 mr-2" />
-                  Analytics
                 </Button>
               </div>
             </div>

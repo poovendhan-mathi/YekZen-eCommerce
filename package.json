@@ -4,11 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:emulator": "firebase emulators:start --only firestore,auth",
-    "dev:all": "concurrently \"npm run dev:emulator\" \"npm run dev\"",
+    "emulator": "firebase emulators:start --only firestore,auth",
+    "seed": "node scripts/seed-emulator.js",
+    "dev:with-emulator": "npm run emulator",
+    "start:dev": "concurrently \"npm run emulator\" \"sleep 5 && npm run seed\" \"sleep 10 && npm run dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -17,7 +20,10 @@
     "setup-db": "node scripts/setup-database.js",
     "setup-instructions": "node scripts/setup-database.js --instructions",
     "seed:local": "node scripts/seedProducts.js",
-    "seed:prod": "NEXT_PUBLIC_USE_FIREBASE_EMULATOR=false node scripts/seedProducts.js"
+    "seed:prod": "NEXT_PUBLIC_USE_FIREBASE_EMULATOR=false node scripts/seedProducts.js",
+    "docs:generate": "node .github/scripts/generate-docs-local.js all",
+    "docs:readme": "node .github/scripts/generate-docs-local.js readme",
+    "docs:review": "node .github/scripts/generate-docs-local.js review"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",

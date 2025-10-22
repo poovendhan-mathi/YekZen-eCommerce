@@ -1,0 +1,17 @@
+name: "Generate README"
+description: "Generate README.md from template with actual metrics"
+author: "YekZen Team"
+
+inputs:
+  template-path:
+    description: "Path to README template file"
+    required: true
+    default: ".github/templates/README.template.md"
+  output-path:
+    description: "Output path for generated README"
+    required: true
+    default: "README.md"
+
+runs:
+  using: "node20"
+  main: "index.js"

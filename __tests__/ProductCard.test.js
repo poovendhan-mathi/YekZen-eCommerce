@@ -14,6 +14,11 @@ const mockProduct = {
   reviews: 123,
 };
 
+// Mock Cart Context
+jest.mock("../contexts/CartContext", () => ({
+  useCart: () => null, // Return null so ProductCard uses fallback console.log
+}));
+
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
   useRouter: () => ({

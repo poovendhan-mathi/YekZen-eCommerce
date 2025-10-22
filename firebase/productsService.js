@@ -41,8 +41,8 @@ export const addProduct = async (productData) => {
 export const getAllProducts = async () => {
   try {
     const productsRef = collection(db, PRODUCTS_COLLECTION);
-    const q = query(productsRef, orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
+    // Simplified - no orderBy to avoid index requirements in emulator
+    const querySnapshot = await getDocs(productsRef);
 
     const products = [];
     querySnapshot.forEach((doc) => {
@@ -52,10 +52,11 @@ export const getAllProducts = async () => {
       });
     });
 
-    return { success: true, products };
+    console.log(`📦 Fetched ${products.length} products from Firestore`);
+    return products; // Return array directly
   } catch (error) {
-    console.error("Error getting products:", error);
-    return { success: false, products: [], error: error.message };
+    console.error("❌ Error getting products:", error);
+    return []; // Return empty array on error
   }
 };
 
@@ -90,11 +91,8 @@ export const getProductById = async (productId) => {
 export const getProductsByCategory = async (category) => {
   try {
     const productsRef = collection(db, PRODUCTS_COLLECTION);
-    const q = query(
-      productsRef,
-      where("category", "==", category),
-      orderBy("createdAt", "desc")
-    );
+    // Simplified query - just filter by category
+    const q = query(productsRef, where("category", "==", category));
     const querySnapshot = await getDocs(q);
 
     const products = [];
@@ -105,10 +103,13 @@ export const getProductsByCategory = async (category) => {
       });
     });
 
-    return { success: true, products };
+    console.log(
+      `📦 Fetched ${products.length} products for category: ${category}`
+    );
+    return products; // Return array directly
   } catch (error) {
-    console.error("Error getting products by category:", error);
-    return { success: false, products: [], error: error.message };
+    console.error("❌ Error getting products by category:", error);
+    return []; // Return empty array on error
   }
 };
 
@@ -118,10 +119,10 @@ export const getProductsByCategory = async (category) => {
 export const getFeaturedProducts = async (limitCount = 8) => {
   try {
     const productsRef = collection(db, PRODUCTS_COLLECTION);
+    // Simplified query - remove orderBy to avoid composite index requirement
     const q = query(
       productsRef,
       where("featured", "==", true),
-      orderBy("createdAt", "desc"),
       limit(limitCount)
     );
     const querySnapshot = await getDocs(q);
@@ -134,10 +135,14 @@ export const getFeaturedProducts = async (limitCount = 8) => {
       });
     });
 
-    return { success: true, products };
+    console.log(
+      `📦 Fetched ${products.length} featured products from Firestore`
+    );
+    return products; // Return array directly
   } catch (error) {
-    console.error("Error getting featured products:", error);
-    return { success: false, products: [], error: error.message };
+    console.error("❌ Error getting featured products:", error);
+    console.error("Error details:", error.code, error.message);
+    return []; // Return empty array on error
   }
 };
 
@@ -166,10 +171,11 @@ export const searchProducts = async (searchTerm) => {
       }
     });
 
-    return { success: true, products };
+    console.log(`🔍 Found ${products.length} products matching: ${searchTerm}`);
+    return products; // Return array directly
   } catch (error) {
     console.error("Error searching products:", error);
-    return { success: false, products: [], error: error.message };
+    return []; // Return empty array on error
   }
 };
 
