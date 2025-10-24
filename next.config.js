@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    // Enable TypeScript with strict type checking
+    ignoreBuildErrors: false,
+  },
   images: {
     remotePatterns: [
       {
@@ -13,7 +17,11 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
+    formats: ["image/webp", "image/avif"],
   },
+  // Enable SWC minification
+  swcMinify: true,
+  compress: true,
   webpack: (config, { isServer }) => {
     // Fix for Firebase/undici compatibility issue
     if (!isServer) {
