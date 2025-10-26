@@ -34,32 +34,50 @@ interface OrderDetails {
 const PaymentSuccessPage = () => {
   const searchParams = useSearchParams();
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
-  const sessionId = searchParams.get("session_id");
-  const paymentId = searchParams.get("payment_id");
+  const [loading, setLoading] = useState(true);
+  const orderId = searchParams.get("orderId");
+  const method = searchParams.get("method");
 
   useEffect(() => {
-    // In a real app, you'd fetch order details from your API
-    // For now, we'll create mock order details
-    const mockOrderDetails = {
-      orderId: `YZ-${Date.now().toString().slice(-6)}`,
-      amount: 299.99,
-      currency: sessionId ? "USD" : "INR",
-      paymentMethod: sessionId ? "Stripe" : "Razorpay",
-      items: [
-        { name: "Wireless Headphones", quantity: 1, price: 129.99 },
-        { name: "Phone Case", quantity: 2, price: 29.99 },
-      ],
-      shippingAddress: {
-        name: "John Doe",
-        address: "123 Main St, City, State 12345",
-      },
-      estimatedDelivery: new Date(
-        Date.now() + 5 * 24 * 60 * 60 * 1000
-      ).toLocaleDateString(),
+    const fetchOrderDetails = async () => {
+      if (orderId) {
+        try {
+          // Fetch real order from Firebase
+          const { ordersService } = await import(
+            "../../../services/orders.service"
+          );
+          const result = await ordersService.getOrderById(orderId);
+
+          if (result.success && result.order) {
+            const order = result.order;
+            setOrderDetails({
+              orderId: order.id,
+              amount: order.totalAmount,
+              currency: method === "stripe" ? "USD" : "INR",
+              paymentMethod: order.paymentMethod,
+              items: order.items.map((item: any) => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+              })),
+              shippingAddress: {
+                name: order.customerInfo?.name || "Customer",
+                address: order.customerInfo?.address || "Address on file",
+              },
+              estimatedDelivery: new Date(
+                Date.now() + 5 * 24 * 60 * 60 * 1000
+              ).toLocaleDateString(),
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching order:", error);
+        }
+      }
+      setLoading(false);
     };
 
-    setOrderDetails(mockOrderDetails);
-  }, [sessionId, paymentId]);
+    fetchOrderDetails();
+  }, [orderId, method]);
 
   const containerVariants = {
     hidden: { opacity: 0, y: 50 },
@@ -78,7 +96,7 @@ const PaymentSuccessPage = () => {
     visible: { opacity: 1, y: 0 },
   };
 
-  if (!orderDetails) {
+  if (loading || !orderDetails) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>

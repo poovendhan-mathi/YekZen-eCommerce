@@ -54,9 +54,18 @@ export const addProduct = async (
  */
 export const getAllProducts = async (): Promise<any[]> => {
   try {
+    console.log("🔍 getAllProducts called - Starting fetch...");
+    console.log(
+      "📊 Database instance:",
+      db ? "✅ Connected" : "❌ Not initialized"
+    );
+
     const productsRef = collection(db, PRODUCTS_COLLECTION);
+    console.log("📁 Collection reference created for:", PRODUCTS_COLLECTION);
+
     // Simplified - no orderBy to avoid index requirements in emulator
     const querySnapshot = await getDocs(productsRef);
+    console.log("📡 Query executed, snapshot size:", querySnapshot.size);
 
     const products: any[] = [];
     querySnapshot.forEach((docSnap) => {
@@ -67,9 +76,14 @@ export const getAllProducts = async (): Promise<any[]> => {
     });
 
     console.log(`📦 Fetched ${products.length} products from Firestore`);
+    console.log("🎯 First product:", products[0]?.name || "No products");
     return products; // Return array directly
   } catch (error) {
     console.error("❌ Error getting products:", error);
+    console.error(
+      "❌ Error details:",
+      error instanceof Error ? error.message : String(error)
+    );
     return []; // Return empty array on error
   }
 };

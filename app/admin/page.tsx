@@ -14,8 +14,11 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   PencilIcon,
+  CubeIcon,
 } from "@heroicons/react/24/outline";
 import Button from "../../components/ui/Button";
+import { getAllProducts } from "../../firebase/productsService";
+import { ordersService } from "../../services/orders.service";
 
 // Types
 type ColorType = "blue" | "green" | "yellow" | "red";
@@ -49,6 +52,7 @@ interface Stats {
   totalRevenue: number;
   totalUsers: number;
   pendingOrders: number;
+  totalProducts: number;
 }
 
 const StatCard: FC<StatCardProps> = ({
@@ -101,6 +105,7 @@ export default function AdminDashboard() {
     totalRevenue: 0,
     totalUsers: 0,
     pendingOrders: 0,
+    totalProducts: 0,
   });
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -121,83 +126,97 @@ export default function AdminDashboard() {
     }
   }, [user, router]);
 
-  // Mock data - in real app, fetch from API
+  // Fetch real data from Firebase
   useEffect(() => {
-    const mockStats = {
-      totalOrders: 1247,
-      totalRevenue: 89420,
-      totalUsers: 3521,
-      pendingOrders: 23,
-    };
+    async function fetchData() {
+      try {
+        setLoading(true);
 
-    const mockRecentOrders = [
-      {
-        id: "ORD-001",
-        customer: "John Doe",
-        total: 189.99,
-        status: "delivered",
-        date: "2024-01-17",
-      },
-      {
-        id: "ORD-002",
-        customer: "Jane Smith",
-        total: 329.99,
-        status: "shipped",
-        date: "2024-01-16",
-      },
-      {
-        id: "ORD-003",
-        customer: "Mike Johnson",
-        total: 79.99,
-        status: "processing",
-        date: "2024-01-16",
-      },
-      {
-        id: "ORD-004",
-        customer: "Sarah Wilson",
-        total: 199.99,
-        status: "pending",
-        date: "2024-01-15",
-      },
-    ];
+        // Fetch products
+        const allProducts = await getAllProducts();
+        const productCount = allProducts.length;
 
-    const mockTopProducts = [
-      {
-        id: 1,
-        name: "Wireless Headphones",
-        sales: 234,
-        revenue: 30456,
-        stock: 45,
-      },
-      {
-        id: 2,
-        name: "Smartphone Case",
-        sales: 189,
-        revenue: 5667,
-        stock: 120,
-      },
-      {
-        id: 3,
-        name: "Laptop Stand",
-        sales: 156,
-        revenue: 46800,
-        stock: 23,
-      },
-      {
-        id: 4,
-        name: "Wireless Mouse",
-        sales: 134,
-        revenue: 9380,
-        stock: 67,
-      },
-    ];
+        // Fetch orders and stats
+        const { success: orderSuccess, orders: allOrders } =
+          await ordersService.getAllOrders();
+        const { success: statsSuccess, stats: orderStats } =
+          await ordersService.getOrderStats();
 
-    setTimeout(() => {
-      setStats(mockStats);
-      setOrders(mockRecentOrders);
-      setProducts(mockTopProducts);
-      setLoading(false);
-    }, 1000);
+        if (!orderSuccess || !statsSuccess) {
+          toast.error("Failed to load some dashboard data");
+        }
+
+        // Set stats with real data
+        const realStats = {
+          totalOrders: orderStats?.totalOrders || 0,
+          totalRevenue: orderStats?.totalRevenue || 0,
+          totalUsers: 0, // TODO: Implement user count from Auth
+          pendingOrders: orderStats?.pendingOrders || 0,
+          totalProducts: productCount,
+        };
+
+        // Get recent orders (top 4)
+        const recentOrders = (allOrders || []).slice(0, 4).map((order) => ({
+          id: order.id,
+          customer: order.customerInfo?.name || "Unknown",
+          total: order.totalAmount || 0,
+          status: order.status || "pending",
+          date: order.createdAt || new Date().toISOString(),
+        }));
+
+        // Calculate top products from orders
+        const productSales: {
+          [key: string]: {
+            name: string;
+            sales: number;
+            revenue: number;
+            stock: number;
+          };
+        } = {};
+
+        (allOrders || []).forEach((order) => {
+          order.items?.forEach((item: any) => {
+            const itemId = item.id;
+            if (!productSales[itemId]) {
+              productSales[itemId] = {
+                name: item.name,
+                sales: 0,
+                revenue: 0,
+                stock: 0,
+              };
+            }
+            // TypeScript now knows productSales[itemId] exists
+            productSales[itemId]!.sales += item.quantity;
+            productSales[itemId]!.revenue += item.price * item.quantity;
+          });
+        });
+
+        // Get stock info from products
+        for (const productId in productSales) {
+          const product = allProducts.find((p) => p.id === productId);
+          if (product) {
+            productSales[productId]!.stock = product.stock || 0;
+          }
+        }
+
+        // Convert to array and sort by revenue
+        const topProducts = Object.entries(productSales)
+          .map(([id, data]) => ({ id: parseInt(id) || 0, ...data }))
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 4);
+
+        setStats(realStats);
+        setOrders(recentOrders);
+        setProducts(topProducts);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        toast.error("Failed to load dashboard data");
+        setLoading(false);
+      }
+    }
+
+    fetchData();
   }, []);
 
   const getOrderStatusIcon = (status: string): JSX.Element => {
@@ -277,10 +296,9 @@ export default function AdminDashboard() {
               color="green"
             />
             <StatCard
-              title="Customers"
-              value={stats.totalUsers?.toLocaleString()}
-              change="+15%"
-              icon={UserGroupIcon}
+              title="Total Products"
+              value={stats.totalProducts?.toLocaleString()}
+              icon={CubeIcon}
               color="blue"
             />
             <StatCard
@@ -305,7 +323,11 @@ export default function AdminDashboard() {
                   <h3 className="text-lg font-semibold text-gray-900">
                     Recent Orders
                   </h3>
-                  <Button variant="secondary" size="sm">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => router.push("/admin/orders")}
+                  >
                     View All
                   </Button>
                 </div>
@@ -422,11 +444,19 @@ export default function AdminDashboard() {
                   <PencilIcon className="w-5 h-5 mr-2" />
                   Manage Products
                 </Button>
-                <Button variant="outline" className="justify-center">
+                <Button
+                  variant="outline"
+                  className="justify-center"
+                  onClick={() => router.push("/admin/orders")}
+                >
                   <ShoppingBagIcon className="w-5 h-5 mr-2" />
                   View All Orders
                 </Button>
-                <Button variant="outline" className="justify-center">
+                <Button
+                  variant="outline"
+                  className="justify-center"
+                  onClick={() => router.push("/admin/customers")}
+                >
                   <UserGroupIcon className="w-5 h-5 mr-2" />
                   Manage Customers
                 </Button>

@@ -9,6 +9,9 @@ export const metadata = {
   title: "YekZen - Premium eCommerce",
   description:
     "Premium eCommerce platform with modern design and seamless shopping experience",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 interface RootLayoutProps {

@@ -6,6 +6,8 @@ import {
   useContext,
   useReducer,
   useEffect,
+  useMemo,
+  useCallback,
   type ReactNode,
 } from "react";
 import toast from "react-hot-toast";
@@ -62,12 +64,14 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         (item) => item.id === action.payload.id
       );
 
+      const quantityToAdd = action.payload.quantity || 1;
+
       if (existingItem) {
         return {
           ...state,
           items: state.items.map((item) =>
             item.id === action.payload.id
-              ? { ...item, quantity: item.quantity + 1 }
+              ? { ...item, quantity: item.quantity + quantityToAdd }
               : item
           ),
         };
@@ -75,7 +79,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
       return {
         ...state,
-        items: [...state.items, { ...action.payload, quantity: 1 }],
+        items: [...state.items, { ...action.payload, quantity: quantityToAdd }],
       };
     }
 
@@ -145,92 +149,121 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to localStorage whenever it changes (debounced)
   useEffect(() => {
-    localStorage.setItem("yekzen-cart", JSON.stringify(state.items));
+    const timer = setTimeout(() => {
+      localStorage.setItem("yekzen-cart", JSON.stringify(state.items));
+    }, 300); // 300ms debounce
+    return () => clearTimeout(timer);
   }, [state.items]);
 
-  // Cart actions
-  const addToCart = (product: CartItem): void => {
+  // Cart actions with useCallback for performance
+  const addToCart = useCallback((product: CartItem): void => {
     dispatch({ type: CART_ACTIONS.ADD_ITEM, payload: product });
-    toast.success(`${product.name} added to cart!`);
-  };
+    // Don't show toast here - let the calling component handle it
+  }, []);
 
-  const removeFromCart = (productId: number | string): void => {
-    const item = state.items.find((item: CartItem) => item.id === productId);
-    dispatch({ type: CART_ACTIONS.REMOVE_ITEM, payload: productId });
-    if (item) {
-      toast.success(`${item.name} removed from cart`);
-    }
-  };
+  const removeFromCart = useCallback(
+    (productId: number | string): void => {
+      const item = state.items.find((item: CartItem) => item.id === productId);
+      dispatch({ type: CART_ACTIONS.REMOVE_ITEM, payload: productId });
+      if (item) {
+        toast.success(`${item.name} removed from cart`);
+      }
+    },
+    [state.items]
+  );
 
-  const updateQuantity = (
-    productId: number | string,
-    quantity: number
-  ): void => {
-    dispatch({
-      type: CART_ACTIONS.UPDATE_QUANTITY,
-      payload: { id: productId, quantity },
-    });
-  };
+  const updateQuantity = useCallback(
+    (productId: number | string, quantity: number): void => {
+      dispatch({
+        type: CART_ACTIONS.UPDATE_QUANTITY,
+        payload: { id: productId, quantity },
+      });
+    },
+    []
+  );
 
-  const clearCart = (): void => {
+  const clearCart = useCallback((): void => {
     dispatch({ type: CART_ACTIONS.CLEAR_CART });
     toast.success("Cart cleared");
-  };
+  }, []);
 
-  // Cart calculations
-  const getItemCount = (): number => {
+  // Cart calculations with useMemo for performance
+  const getItemCount = useCallback((): number => {
     return state.items.reduce((total, item) => total + item.quantity, 0);
-  };
+  }, [state.items]);
 
-  const getSubtotal = (): number => {
+  const getSubtotal = useCallback((): number => {
     return state.items.reduce(
       (total, item) => total + item.price * item.quantity,
       0
     );
-  };
+  }, [state.items]);
 
-  const getTax = (): number => {
+  const getTax = useCallback((): number => {
     return getSubtotal() * 0.08; // 8% tax
-  };
+  }, [getSubtotal]);
 
-  const getShipping = (): number => {
+  const getShipping = useCallback((): number => {
     return getSubtotal() > 50 ? 0 : 9.99; // Free shipping over $50
-  };
+  }, [getSubtotal]);
 
-  const getTotal = (): number => {
+  const getTotal = useCallback((): number => {
     return getSubtotal() + getTax() + getShipping();
-  };
+  }, [getSubtotal, getTax, getShipping]);
 
-  const isInCart = (productId: number | string): boolean => {
-    return state.items.some((item: CartItem) => item.id === productId);
-  };
+  const isInCart = useCallback(
+    (productId: number | string): boolean => {
+      return state.items.some((item: CartItem) => item.id === productId);
+    },
+    [state.items]
+  );
 
-  const getItemQuantity = (productId: number | string): number => {
-    const item = state.items.find((item: CartItem) => item.id === productId);
-    return item ? item.quantity : 0;
-  };
+  const getItemQuantity = useCallback(
+    (productId: number | string): number => {
+      const item = state.items.find((item: CartItem) => item.id === productId);
+      return item ? item.quantity : 0;
+    },
+    [state.items]
+  );
 
-  const value = {
-    // State
-    items: state.items,
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(
+    () => ({
+      // State
+      items: state.items,
 
-    // Actions
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
+      // Actions
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
 
-    // Calculations
-    getItemCount,
-    getSubtotal,
-    getTax,
-    getShipping,
-    getTotal,
-    isInCart,
-    getItemQuantity,
-  };
+      // Calculations
+      getItemCount,
+      getSubtotal,
+      getTax,
+      getShipping,
+      getTotal,
+      isInCart,
+      getItemQuantity,
+    }),
+    [
+      state.items,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      getItemCount,
+      getSubtotal,
+      getTax,
+      getShipping,
+      getTotal,
+      isInCart,
+      getItemQuantity,
+    ]
+  );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };

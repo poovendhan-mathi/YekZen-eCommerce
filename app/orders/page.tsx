@@ -17,6 +17,10 @@ import {
 } from "@heroicons/react/24/outline";
 import Button from "../../components/ui/Button";
 import Link from "next/link";
+import { useAuth } from "../../contexts/AuthContext";
+import { ordersService } from "../../services/orders.service";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 interface OrderItem {
   id: number;
@@ -60,158 +64,112 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const { user } = useAuth();
+  const router = useRouter();
 
-  // Mock orders data - in real app, fetch from API
+  // Fetch real orders from Firebase
   useEffect(() => {
-    const mockOrders = [
-      {
-        id: "ORD-001",
-        date: "2024-01-15",
-        status: "delivered",
-        total: 189.98,
-        subtotal: 159.98,
-        shipping: 9.99,
-        tax: 20.01,
-        paymentMethod: "Stripe",
-        items: [
-          {
-            id: 1,
-            name: "Wireless Headphones",
-            description: "Premium noise-cancelling headphones",
-            price: 129.99,
-            quantity: 1,
-            image:
-              "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300",
-          },
-          {
-            id: 2,
-            name: "Phone Case",
-            description: "Protective case for smartphones",
-            price: 29.99,
-            quantity: 1,
-            image:
-              "https://images.unsplash.com/photo-1601593346740-925612772716?w=300",
-          },
-        ],
-        shippingInfo: {
-          address: "123 Main St, Apt 4B, New York, NY 10001",
-          method: "Standard Shipping",
-          tracking: "TR123456789",
-          estimatedDelivery: "2024-01-18",
-          deliveredDate: "2024-01-17",
-        },
-        statusHistory: [
-          {
-            status: "confirmed",
-            date: "2024-01-15T10:00:00Z",
-            description: "Order confirmed",
-          },
-          {
-            status: "processing",
-            date: "2024-01-15T14:00:00Z",
-            description: "Processing payment",
-          },
-          {
-            status: "shipped",
-            date: "2024-01-16T09:00:00Z",
-            description: "Package shipped",
-          },
-          {
-            status: "delivered",
-            date: "2024-01-17T15:30:00Z",
-            description: "Package delivered",
-          },
-        ],
-      },
-      {
-        id: "ORD-002",
-        date: "2024-01-10",
-        status: "shipped",
-        total: 329.98,
-        subtotal: 299.99,
-        shipping: 15.99,
-        tax: 14.0,
-        paymentMethod: "Razorpay",
-        items: [
-          {
-            id: 3,
-            name: "Laptop Stand",
-            description: "Adjustable aluminum laptop stand",
-            price: 299.99,
-            quantity: 1,
-            image:
-              "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300",
-          },
-        ],
-        shippingInfo: {
-          address: "456 Oak Ave, Suite 200, Los Angeles, CA 90210",
-          method: "Express Shipping",
-          tracking: "TR987654321",
-          estimatedDelivery: "2024-01-12",
-        },
-        statusHistory: [
-          {
-            status: "confirmed",
-            date: "2024-01-10T11:00:00Z",
-            description: "Order confirmed",
-          },
-          {
-            status: "processing",
-            date: "2024-01-10T16:00:00Z",
-            description: "Processing payment",
-          },
-          {
-            status: "shipped",
-            date: "2024-01-11T08:00:00Z",
-            description: "Package shipped",
-          },
-        ],
-      },
-      {
-        id: "ORD-003",
-        date: "2024-01-08",
-        status: "processing",
-        total: 79.99,
-        subtotal: 69.99,
-        shipping: 5.99,
-        tax: 4.01,
-        paymentMethod: "Stripe",
-        items: [
-          {
-            id: 4,
-            name: "Wireless Mouse",
-            description: "Ergonomic wireless mouse",
-            price: 69.99,
-            quantity: 1,
-            image:
-              "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300",
-          },
-        ],
-        shippingInfo: {
-          address: "789 Pine St, Miami, FL 33101",
-          method: "Standard Shipping",
-          estimatedDelivery: "2024-01-15",
-        },
-        statusHistory: [
-          {
-            status: "confirmed",
-            date: "2024-01-08T13:00:00Z",
-            description: "Order confirmed",
-          },
-          {
-            status: "processing",
-            date: "2024-01-08T17:00:00Z",
-            description: "Processing payment",
-          },
-        ],
-      },
-    ];
+    async function fetchOrders() {
+      if (!user) {
+        toast.error("Please sign in to view your orders");
+        router.push("/signin?returnUrl=" + encodeURIComponent("/orders"));
+        return;
+      }
 
-    setTimeout(() => {
-      setOrders(mockOrders as Order[]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+      try {
+        setLoading(true);
+        const {
+          success,
+          orders: userOrders,
+          error,
+        } = await ordersService.getUserOrders(user.email!);
+
+        if (!success || !userOrders) {
+          toast.error(error || "Failed to load orders");
+          setOrders([]);
+          setLoading(false);
+          return;
+        }
+
+        // Transform orders to match the UI structure
+        const transformedOrders: Order[] = userOrders.map((order) => ({
+          id: order.id,
+          date: order.createdAt || new Date().toISOString(),
+          status: order.status || "pending",
+          total: order.totalAmount || 0,
+          subtotal: order.totalAmount ? order.totalAmount * 0.85 : 0, // Approximate
+          shipping: order.totalAmount ? order.totalAmount * 0.1 : 0, // Approximate
+          tax: order.totalAmount ? order.totalAmount * 0.05 : 0, // Approximate
+          paymentMethod: order.paymentMethod || "Unknown",
+          items: (order.items || []).map((item: any) => ({
+            id: parseInt(item.id) || 0,
+            name: item.name || "Unknown Product",
+            description: item.description || "",
+            price: item.price || 0,
+            quantity: item.quantity || 1,
+            image: item.image || "https://via.placeholder.com/300",
+          })),
+          shippingInfo: {
+            address: `${order.customerInfo?.address || ""}, ${
+              order.customerInfo?.city || ""
+            }, ${order.customerInfo?.postalCode || ""}`,
+            method: "Standard Shipping",
+            estimatedDelivery:
+              new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .split("T")[0] || "",
+            ...(order.status === "delivered" && {
+              deliveredDate: order.createdAt || new Date().toISOString(),
+            }),
+          },
+          statusHistory: [
+            {
+              status: "confirmed",
+              date: order.createdAt || new Date().toISOString(),
+              description: "Order confirmed",
+            },
+            ...(order.status !== "pending"
+              ? [
+                  {
+                    status: "processing",
+                    date: order.createdAt || new Date().toISOString(),
+                    description: "Processing payment",
+                  },
+                ]
+              : []),
+            ...(order.status === "shipped" || order.status === "delivered"
+              ? [
+                  {
+                    status: "shipped",
+                    date: order.createdAt || new Date().toISOString(),
+                    description: "Package shipped",
+                  },
+                ]
+              : []),
+            ...(order.status === "delivered"
+              ? [
+                  {
+                    status: "delivered",
+                    date: order.createdAt || new Date().toISOString(),
+                    description: "Package delivered",
+                  },
+                ]
+              : []),
+          ],
+        }));
+
+        setOrders(transformedOrders);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        toast.error("Failed to load orders");
+        setOrders([]);
+        setLoading(false);
+      }
+    }
+
+    fetchOrders();
+  }, [user, router]);
 
   const getStatusIcon = (status: string): JSX.Element => {
     switch (status) {

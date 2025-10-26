@@ -26,11 +26,13 @@ EMULATOR_PID=$!
 
 # Wait for emulators to be ready
 echo "⏳ Waiting for emulators to start..."
-sleep 8
+sleep 10
 
 echo ""
-echo "🌱 Step 2/3: Seeding data..."
-node scripts/seed-emulator.js
+echo "🌱 Step 2/3: Seeding data (60 products + users + images)..."
+node scripts/seed-large.js
+sleep 2
+node scripts/add-multiple-images.js
 
 echo ""
 echo "🎨 Step 3/3: Starting Next.js development server..."
@@ -50,6 +52,11 @@ echo ""
 echo "👤 Test Accounts:"
 echo "   • Admin: admin@yekzen.com / admin123456"
 echo "   • User:  user@yekzen.com / user123456"
+echo ""
+echo "💳 Dummy Payment Cards (for testing):"
+echo "   • Visa:       4111 1111 1111 1111 | CVV: 123 | Exp: 12/25"
+echo "   • Mastercard: 5555 5555 5555 4444 | CVV: 456 | Exp: 11/26"
+echo "   • Amex:       3782 822463 10005   | CVV: 1234 | Exp: 10/27"
 echo ""
 echo "⌨️  Press Ctrl+C to stop all services"
 echo ""

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { DevicePhoneMobileIcon } from "@heroicons/react/24/outline";
 import Button from "../ui/Button";
 import toast from "react-hot-toast";
+import DemoPaymentModal from "./DemoPaymentModal";
 
 interface CartItem {
   id: string;
@@ -48,6 +49,7 @@ const RazorpayButton: React.FC<RazorpayButtonProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   // Load Razorpay script
   useEffect(() => {
@@ -82,14 +84,27 @@ const RazorpayButton: React.FC<RazorpayButtonProps> = ({
       return;
     }
 
-    if (!isRazorpayLoaded) {
-      toast.error("Payment system not ready. Please try again.");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
+      // Check if we're in development mode without Razorpay keys
+      const isDevelopmentMode =
+        process.env.NODE_ENV === "development" &&
+        !process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+
+      if (isDevelopmentMode) {
+        // Show demo payment modal with card/UPI form
+        setIsLoading(false);
+        setShowDemoModal(true);
+        return;
+      }
+
+      if (!isRazorpayLoaded) {
+        toast.error("Payment system not ready. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
       // Create Razorpay order
       const response = await fetch("/api/payments/razorpay/order", {
         method: "POST",
@@ -180,41 +195,99 @@ const RazorpayButton: React.FC<RazorpayButtonProps> = ({
     }
   };
 
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className={className}
-    >
-      <Button
-        onClick={handleRazorpayPayment}
-        disabled={disabled || isLoading || !items?.length || !isRazorpayLoaded}
-        className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3"
-      >
-        {isLoading ? (
-          <>
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>Processing...</span>
-          </>
-        ) : (
-          <>
-            <DevicePhoneMobileIcon className="w-6 h-6" />
-            <span>Pay with UPI</span>
-            {amount && (
-              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                ₹{amount.toFixed(2)}
-              </span>
-            )}
-          </>
-        )}
-      </Button>
+  const handleDemoPaymentSuccess = async () => {
+    try {
+      // Create order and update stock
+      const { ordersService } = await import("../../services/orders.service");
+      const orderResult = await ordersService.createOrder({
+        items: items.map((item) => ({
+          id: String(item.id),
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        customerInfo: {
+          name: customerInfo.name,
+          email: customerInfo.email,
+          phone: customerInfo.phone,
+          address: customerInfo.address || "",
+          city: customerInfo.city || "",
+          postalCode: customerInfo.postalCode || "",
+          country: customerInfo.country || "",
+        },
+        paymentMethod: "Razorpay (Demo)",
+        totalAmount: amount || 0,
+        paymentId: `demo_razorpay_${Date.now()}`,
+      });
 
-      {!isRazorpayLoaded && (
-        <p className="text-xs text-gray-500 mt-2 text-center">
-          Loading payment system...
-        </p>
-      )}
-    </motion.div>
+      if (!orderResult.success) {
+        toast.error(orderResult.error || "Failed to create order");
+        return;
+      }
+
+      toast.success("🎉 Demo Razorpay Payment Successful!");
+      localStorage.removeItem("yekzen-cart");
+
+      setTimeout(() => {
+        window.location.href = `/payment/success?orderId=${orderResult.orderId}&method=razorpay`;
+      }, 500);
+    } catch (error) {
+      console.error("Order creation error:", error);
+      toast.error("Failed to complete order");
+    }
+  };
+
+  return (
+    <>
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={className}
+      >
+        <Button
+          onClick={handleRazorpayPayment}
+          disabled={
+            disabled || isLoading || !items?.length || !isRazorpayLoaded
+          }
+          className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3"
+        >
+          {isLoading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <DevicePhoneMobileIcon className="w-6 h-6" />
+              <span>Pay with UPI</span>
+              {amount && (
+                <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                  ₹{amount.toFixed(2)}
+                </span>
+              )}
+            </>
+          )}
+        </Button>
+
+        {!isRazorpayLoaded && (
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            Loading payment system...
+          </p>
+        )}
+      </motion.div>
+
+      <DemoPaymentModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        amount={amount || 0}
+        onSuccess={handleDemoPaymentSuccess}
+        customerInfo={{
+          name: customerInfo.name,
+          email: customerInfo.email,
+        }}
+      />
+    </>
   );
 };
 

@@ -14,6 +14,7 @@ import {
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import Button from "../../../components/ui/Button";
 import toast from "react-hot-toast";
+import { useCart } from "../../../contexts/CartContext";
 
 interface Product {
   id: number;
@@ -40,109 +41,104 @@ interface Product {
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Mock product data - in real app, fetch from API
+  // Fetch product data from Firebase
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      try {
+        const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
+        const productId = rawId ?? "1";
 
-      const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
-      const productId = rawId ?? "1";
-      const mockProduct: Product = {
-        id: parseInt(productId, 10),
-        name: "Premium Wireless Headphones",
-        description:
-          "Experience crystal-clear audio with these premium wireless headphones featuring active noise cancellation and 30-hour battery life.",
-        price: 129.99,
-        originalPrice: 179.99,
-        rating: 4.5,
-        reviewCount: 234,
-        category: "Electronics",
-        brand: "TechPro",
-        inStock: true,
-        stockCount: 15,
-        images: [
-          "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600",
-          "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=600",
-          "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600",
-          "https://images.unsplash.com/photo-1524678606370-a47ad25cb82a?w=600",
-        ],
-        features: [
-          "Active Noise Cancellation",
-          "30-hour Battery Life",
-          "Quick Charge (5min = 3hrs)",
-          "Premium Comfort Padding",
-          "Wireless & Wired Connection",
-          "Built-in Microphone",
-        ],
-        specifications: {
-          "Driver Size": "40mm",
-          "Frequency Response": "20Hz - 20kHz",
-          Impedance: "32 Ohm",
-          Weight: "250g",
-          Connectivity: "Bluetooth 5.0, 3.5mm",
-          Charging: "USB-C",
-        },
-        shipping: {
-          free: true,
-          estimatedDays: "2-3 business days",
-          returnPolicy: "30-day return policy",
-        },
-      };
+        // Import Firebase service
+        const { getProductById } = await import(
+          "../../../firebase/productsService"
+        );
+        const result = await getProductById(productId);
 
-      setProduct(mockProduct);
-      setLoading(false);
+        if (result.success && result.product) {
+          const fbProduct = result.product;
+          // Map Firebase product to component format
+          const mappedProduct: Product = {
+            id: parseInt(productId, 10),
+            name: fbProduct.name,
+            description: fbProduct.description || "No description available",
+            price: fbProduct.price,
+            originalPrice: fbProduct.originalPrice || fbProduct.price * 1.2,
+            rating: fbProduct.rating || 4.5,
+            reviewCount: Math.floor(Math.random() * 300) + 50,
+            category: fbProduct.category,
+            brand: fbProduct.brand || "Premium Brand",
+            inStock: fbProduct.inStock !== false,
+            stockCount: fbProduct.stock || 10,
+            images:
+              fbProduct.images && fbProduct.images.length > 0
+                ? fbProduct.images
+                : fbProduct.image
+                ? [fbProduct.image]
+                : [
+                    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600",
+                  ],
+            features: [
+              "Premium Quality",
+              "Free Shipping",
+              "30-Day Returns",
+              "Warranty Included",
+              "24/7 Customer Support",
+            ],
+            specifications: {
+              Brand: fbProduct.brand || "Premium",
+              Category: fbProduct.category,
+              Stock: String(fbProduct.stock || 10),
+              Rating: String(fbProduct.rating || 4.5),
+            },
+            shipping: {
+              free: true,
+              estimatedDays: "2-3 business days",
+              returnPolicy: "30-day return policy",
+            },
+          };
+          setProduct(mappedProduct);
+        } else {
+          toast.error("Product not found");
+          router.push("/products");
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        toast.error("Failed to load product");
+        router.push("/products");
+      } finally {
+        setLoading(false);
+      }
     };
 
     if (params.id) {
       fetchProduct();
     }
-  }, [params.id]);
+  }, [params.id, router]);
 
   const handleAddToCart = () => {
     if (!product) return;
 
-    interface CartItem {
-      id: number;
-      name: string;
-      price: number;
-      quantity: number;
-      image: string;
-    }
-
-    // In real app, add to cart context
-    const cartItem: CartItem = {
+    // Add to cart with specified quantity using CartContext
+    addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
-      quantity: quantity,
       image: product.images[0] || "",
-    };
+      quantity: quantity, // Pass the actual quantity
+    });
 
-    // Store in localStorage for now
-    const existingCart: CartItem[] = JSON.parse(
-      localStorage.getItem("cart") || "[]"
+    toast.success(
+      `Added ${quantity} ${quantity > 1 ? "items" : "item"} to cart`
     );
-    const existingItemIndex = existingCart.findIndex(
-      (item: CartItem) => item.id === product.id
-    );
-
-    if (existingItemIndex > -1 && existingCart[existingItemIndex]) {
-      existingCart[existingItemIndex].quantity += quantity;
-    } else {
-      existingCart.push(cartItem);
-    }
-
-    localStorage.setItem("cart", JSON.stringify(existingCart));
-    toast.success(`Added ${quantity} item(s) to cart`);
   };
 
   const handleWishlist = () => {

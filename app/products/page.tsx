@@ -23,6 +23,12 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string }>
+  >([{ id: "all", name: "All Products" }]);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
+    {}
+  );
 
   useEffect(() => {
     // Get category from URL params
@@ -32,14 +38,49 @@ export default function ProductsPage() {
     }
   }, [searchParams]);
 
-  const categories = [
-    { id: "all", name: "All Products" },
-    { id: "audio", name: "Audio" },
-    { id: "wearables", name: "Wearables" },
-    { id: "computers", name: "Computers" },
-    { id: "gaming", name: "Gaming" },
-    { id: "cameras", name: "Cameras" },
-  ];
+  // Fetch all products and build categories from actual data
+  useEffect(() => {
+    async function fetchCategoriesFromProducts() {
+      try {
+        const allProducts = await getAllProducts();
+        const counts: Record<string, number> = { all: allProducts.length };
+        const categoryMap = new Map<string, string>();
+
+        // Extract unique categories from products
+        allProducts.forEach((product) => {
+          if (product.category) {
+            // Capitalize category name properly
+            const categoryName = product.category
+              .split("-")
+              .map(
+                (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
+              )
+              .join(" ");
+            categoryMap.set(product.category, categoryName);
+            counts[product.category] = (counts[product.category] || 0) + 1;
+          }
+        });
+
+        // Build categories array from actual data
+        const categoriesFromDB = Array.from(categoryMap.entries()).map(
+          ([id, name]) => ({ id, name })
+        );
+
+        // Sort alphabetically
+        categoriesFromDB.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Add "All Products" at the beginning
+        setCategories([
+          { id: "all", name: "All Products" },
+          ...categoriesFromDB,
+        ]);
+        setCategoryCounts(counts);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    }
+    fetchCategoriesFromProducts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -50,12 +91,14 @@ export default function ProductsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            All Products
-          </h1>
-          <p className="text-gray-600">
-            Discover our complete collection of premium products
-          </p>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              All Products
+            </h1>
+            <p className="text-gray-600">
+              Discover our complete collection of premium products
+            </p>
+          </div>
         </motion.div>
 
         {/* Search and Filters */}
@@ -89,6 +132,8 @@ export default function ProductsPage() {
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
+                    {categoryCounts[category.id] !== undefined &&
+                      ` (${categoryCounts[category.id]})`}
                   </option>
                 ))}
               </select>
@@ -152,13 +197,25 @@ export default function ProductsPage() {
 function ProductsGrid({ category, searchQuery }: ProductsGridProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  // Fetch all products once for counts
+  useEffect(() => {
+    async function fetchAllProducts() {
+      try {
+        await getAllProducts();
+      } catch (err) {
+        console.error("Error fetching all products:", err);
+      }
+    }
+    fetchAllProducts();
+  }, []);
 
   useEffect(() => {
     async function fetchProducts() {
       try {
         setLoading(true);
-        setError(null);
+        setError("");
 
         let fetchedProducts = [];
 
@@ -225,21 +282,29 @@ function ProductsGrid({ category, searchQuery }: ProductsGridProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-    >
-      {products.map((product, index) => (
-        <motion.div
-          key={product.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.05 }}
-        >
-          <ProductCard product={product} />
-        </motion.div>
-      ))}
-    </motion.div>
+    <>
+      <div className="mb-4 text-sm text-gray-600">
+        Showing {products.length}{" "}
+        {products.length === 1 ? "product" : "products"}
+        {category && category !== "all" && ` in ${category}`}
+        {searchQuery && ` matching "${searchQuery}"`}
+      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      >
+        {products.map((product, index) => (
+          <motion.div
+            key={product.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+          >
+            <ProductCard product={product} />
+          </motion.div>
+        ))}
+      </motion.div>
+    </>
   );
 }

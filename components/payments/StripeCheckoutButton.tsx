@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { CreditCardIcon } from "@heroicons/react/24/outline";
 import Button from "../ui/Button";
 import toast from "react-hot-toast";
+import DemoPaymentModal from "./DemoPaymentModal";
 
 interface CartItem {
   id: string;
@@ -22,6 +23,7 @@ interface StripeCheckoutButtonProps {
   amount?: number;
   disabled?: boolean;
   className?: string;
+  customerName?: string;
 }
 
 const StripeCheckoutButton: React.FC<StripeCheckoutButtonProps> = ({
@@ -30,8 +32,10 @@ const StripeCheckoutButton: React.FC<StripeCheckoutButtonProps> = ({
   amount,
   disabled = false,
   className = "",
+  customerName = "",
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   const handleStripeCheckout = async () => {
     if (!items || items.length === 0) {
@@ -42,6 +46,18 @@ const StripeCheckoutButton: React.FC<StripeCheckoutButtonProps> = ({
     setIsLoading(true);
 
     try {
+      // Check if we're in development mode without Stripe keys
+      const isDevelopmentMode =
+        process.env.NODE_ENV === "development" &&
+        !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+
+      if (isDevelopmentMode) {
+        // Show demo payment modal with card form
+        setIsLoading(false);
+        setShowDemoModal(true);
+        return;
+      }
+
       // Create checkout session
       const response = await fetch("/api/payments/stripe/checkout", {
         method: "POST",
@@ -83,35 +99,91 @@ const StripeCheckoutButton: React.FC<StripeCheckoutButtonProps> = ({
     }
   };
 
+  const handleDemoPaymentSuccess = async () => {
+    try {
+      // Create order and update stock
+      const { ordersService } = await import("../../services/orders.service");
+      const orderResult = await ordersService.createOrder({
+        items: items.map((item) => ({
+          id: String(item.id),
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        customerInfo: {
+          name: customerName,
+          email: customerEmail || "",
+          phone: "",
+          address: "",
+          city: "",
+          postalCode: "",
+          country: "",
+        },
+        paymentMethod: "Stripe (Demo)",
+        totalAmount: amount || 0,
+        paymentId: `demo_stripe_${Date.now()}`,
+      });
+
+      if (!orderResult.success) {
+        toast.error(orderResult.error || "Failed to create order");
+        return;
+      }
+
+      toast.success("🎉 Demo Stripe Payment Successful!");
+      localStorage.removeItem("yekzen-cart");
+
+      setTimeout(() => {
+        window.location.href = `/payment/success?orderId=${orderResult.orderId}&method=stripe`;
+      }, 500);
+    } catch (error) {
+      console.error("Order creation error:", error);
+      toast.error("Failed to complete order");
+    }
+  };
+
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className={className}
-    >
-      <Button
-        onClick={handleStripeCheckout}
-        disabled={disabled || isLoading || !items?.length}
-        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3"
+    <>
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={className}
       >
-        {isLoading ? (
-          <>
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>Processing...</span>
-          </>
-        ) : (
-          <>
-            <CreditCardIcon className="w-6 h-6" />
-            <span>Pay with Stripe</span>
-            {amount && (
-              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                ${amount.toFixed(2)}
-              </span>
-            )}
-          </>
-        )}
-      </Button>
-    </motion.div>
+        <Button
+          onClick={handleStripeCheckout}
+          disabled={disabled || isLoading || !items?.length}
+          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3"
+        >
+          {isLoading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <CreditCardIcon className="w-6 h-6" />
+              <span>Pay with Stripe</span>
+              {amount && (
+                <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                  ${amount.toFixed(2)}
+                </span>
+              )}
+            </>
+          )}
+        </Button>
+      </motion.div>
+
+      <DemoPaymentModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        amount={amount || 0}
+        onSuccess={handleDemoPaymentSuccess}
+        customerInfo={{
+          name: customerName,
+          email: customerEmail || "",
+        }}
+      />
+    </>
   );
 };
 

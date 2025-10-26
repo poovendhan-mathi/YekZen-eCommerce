@@ -22,9 +22,9 @@ const {
 // Firebase config for emulator
 const firebaseConfig = {
   apiKey: "demo-api-key",
-  authDomain: "demo-yekzen.firebaseapp.com",
-  projectId: "demo-yekzen",
-  storageBucket: "demo-yekzen.appspot.com",
+  authDomain: "demo-no-project.firebaseapp.com",
+  projectId: "demo-no-project",
+  storageBucket: "demo-no-project.appspot.com",
   messagingSenderId: "123456789",
   appId: "1:123456789:web:abcdef",
 };

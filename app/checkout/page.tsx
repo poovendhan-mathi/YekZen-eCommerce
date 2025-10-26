@@ -49,30 +49,36 @@ export default function CheckoutPage() {
   });
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("stripe");
   const [isFormValid, setIsFormValid] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
+    {}
+  );
 
-  // Mock cart data - in real app, get from context/localStorage
+  // Get cart data from localStorage
   useEffect(() => {
-    const mockCartItems: CartItem[] = [
-      {
-        id: "1",
-        name: "Wireless Headphones",
-        description: "Premium noise-cancelling headphones",
-        price: 129.99,
-        quantity: 1,
-        image:
-          "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300",
-      },
-      {
-        id: "2",
-        name: "Phone Case",
-        description: "Protective case for smartphones",
-        price: 29.99,
-        quantity: 2,
-        image:
-          "https://images.unsplash.com/photo-1601593346740-925612772716?w=300",
-      },
-    ];
-    setCartItems(mockCartItems);
+    const savedCart = localStorage.getItem("yekzen-cart");
+    if (savedCart) {
+      try {
+        const cartData = JSON.parse(savedCart);
+        // Map cart items to checkout format
+        const mappedItems: CartItem[] = cartData.map((item: any) => ({
+          id: String(item.id),
+          name: item.name,
+          description: item.description || "",
+          price: item.price,
+          quantity: item.quantity,
+          image:
+            item.image ||
+            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300",
+        }));
+        setCartItems(mappedItems);
+      } catch (error) {
+        console.error("Error loading cart:", error);
+        setCartItems([]);
+      }
+    }
   }, []);
 
   const subtotal = cartItems.reduce(
@@ -94,21 +100,56 @@ export default function CheckoutPage() {
       ...prev,
       [name]: value,
     }));
+    // Mark field as touched
+    setTouchedFields((prev) => ({
+      ...prev,
+      [name]: true,
+    }));
   };
 
   // Validate form
   useEffect(() => {
-    const requiredFields: (keyof CustomerInfo)[] = [
-      "name",
-      "email",
-      "address",
-      "city",
-      "postalCode",
-    ];
-    const isValid = requiredFields.every((field) =>
-      customerInfo[field]?.trim()
-    );
-    setIsFormValid(isValid);
+    const errors: Record<string, string> = {};
+
+    // Required field validation
+    if (!customerInfo.name.trim()) {
+      errors.name = "Name is required";
+    }
+
+    if (!customerInfo.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerInfo.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    // Phone validation - relaxed for international numbers with country codes
+    if (!customerInfo.phone.trim()) {
+      errors.phone = "Phone number is required";
+    } else {
+      const phoneDigits = customerInfo.phone.replace(/[^0-9]/g, "");
+      if (phoneDigits.length < 7) {
+        errors.phone = "Please enter a valid phone number";
+      }
+    }
+
+    if (!customerInfo.address.trim()) {
+      errors.address = "Address is required";
+    }
+
+    if (!customerInfo.city.trim()) {
+      errors.city = "City is required";
+    }
+
+    if (!customerInfo.postalCode.trim()) {
+      errors.postalCode = "Postal code is required";
+    }
+
+    if (!customerInfo.country.trim()) {
+      errors.country = "Country is required";
+    }
+
+    setValidationErrors(errors);
+    setIsFormValid(Object.keys(errors).length === 0);
   }, [customerInfo]);
 
   if (cartItems.length === 0) {
@@ -164,27 +205,74 @@ export default function CheckoutPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  name="name"
-                  placeholder="Full Name"
-                  value={customerInfo.name}
-                  onChange={handleInputChange}
-                  required
-                />
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="Email Address"
-                  value={customerInfo.email}
-                  onChange={handleInputChange}
-                  required
-                />
-                <Input
-                  name="phone"
-                  placeholder="Phone Number"
-                  value={customerInfo.phone}
-                  onChange={handleInputChange}
-                />
+                <div>
+                  <Input
+                    name="name"
+                    placeholder="Full Name"
+                    value={customerInfo.name}
+                    onChange={handleInputChange}
+                    required
+                    className={
+                      touchedFields.name && validationErrors.name
+                        ? "border-red-500"
+                        : ""
+                    }
+                  />
+                  {touchedFields.name && validationErrors.name && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {validationErrors.name}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Input
+                    name="email"
+                    type="email"
+                    placeholder="Email Address"
+                    value={customerInfo.email}
+                    onChange={handleInputChange}
+                    required
+                    className={
+                      touchedFields.email && validationErrors.email
+                        ? "border-red-500"
+                        : ""
+                    }
+                  />
+                  {touchedFields.email && validationErrors.email && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {validationErrors.email}
+                    </p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <Input
+                    name="phone"
+                    placeholder="Phone Number (e.g., +1234567890)"
+                    value={customerInfo.phone}
+                    onChange={(e) => {
+                      // Only allow numbers, +, -, spaces, and parentheses
+                      const value = e.target.value.replace(/[^0-9+\-() ]/g, "");
+                      handleInputChange({
+                        ...e,
+                        target: { ...e.target, name: "phone", value },
+                      });
+                    }}
+                    required
+                    pattern="[\+]?[0-9\-() ]+"
+                    minLength={10}
+                    maxLength={15}
+                    className={
+                      touchedFields.phone && validationErrors.phone
+                        ? "border-red-500"
+                        : ""
+                    }
+                  />
+                  {touchedFields.phone && validationErrors.phone && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {validationErrors.phone}
+                    </p>
+                  )}
+                </div>
               </div>
             </motion.div>
 
@@ -203,41 +291,141 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-4">
-                <Input
-                  name="address"
-                  placeholder="Street Address"
-                  value={customerInfo.address}
-                  onChange={handleInputChange}
-                  required
-                />
-                <div className="grid grid-cols-2 gap-4">
+                <div>
                   <Input
-                    name="city"
-                    placeholder="City"
-                    value={customerInfo.city}
+                    name="address"
+                    placeholder="Street Address"
+                    value={customerInfo.address}
                     onChange={handleInputChange}
                     required
+                    className={
+                      touchedFields.address && validationErrors.address
+                        ? "border-red-500"
+                        : ""
+                    }
                   />
-                  <Input
-                    name="postalCode"
-                    placeholder="Postal Code"
-                    value={customerInfo.postalCode}
-                    onChange={handleInputChange}
-                    required
-                  />
+                  {touchedFields.address && validationErrors.address && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {validationErrors.address}
+                    </p>
+                  )}
                 </div>
-                <select
-                  name="country"
-                  value={customerInfo.country}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="US">United States</option>
-                  <option value="IN">India</option>
-                  <option value="CA">Canada</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="AU">Australia</option>
-                </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Input
+                      name="city"
+                      placeholder="City"
+                      value={customerInfo.city}
+                      onChange={handleInputChange}
+                      required
+                      className={
+                        touchedFields.city && validationErrors.city
+                          ? "border-red-500"
+                          : ""
+                      }
+                    />
+                    {touchedFields.city && validationErrors.city && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {validationErrors.city}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Input
+                      name="postalCode"
+                      placeholder="Postal Code"
+                      value={customerInfo.postalCode}
+                      onChange={handleInputChange}
+                      required
+                      className={
+                        touchedFields.postalCode && validationErrors.postalCode
+                          ? "border-red-500"
+                          : ""
+                      }
+                    />
+                    {touchedFields.postalCode &&
+                      validationErrors.postalCode && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {validationErrors.postalCode}
+                        </p>
+                      )}
+                  </div>
+                </div>
+                <div>
+                  <select
+                    name="country"
+                    value={customerInfo.country}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                      touchedFields.country && validationErrors.country
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                    required
+                  >
+                    <option value="">Select Country</option>
+                    <option value="US">United States</option>
+                    <option value="IN">India</option>
+                    <option value="CA">Canada</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="AU">Australia</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="IT">Italy</option>
+                    <option value="ES">Spain</option>
+                    <option value="JP">Japan</option>
+                    <option value="CN">China</option>
+                    <option value="BR">Brazil</option>
+                    <option value="MX">Mexico</option>
+                    <option value="SG">Singapore</option>
+                    <option value="AE">United Arab Emirates</option>
+                    <option value="SA">Saudi Arabia</option>
+                    <option value="ZA">South Africa</option>
+                    <option value="NZ">New Zealand</option>
+                    <option value="SE">Sweden</option>
+                    <option value="NO">Norway</option>
+                    <option value="DK">Denmark</option>
+                    <option value="FI">Finland</option>
+                    <option value="NL">Netherlands</option>
+                    <option value="BE">Belgium</option>
+                    <option value="CH">Switzerland</option>
+                    <option value="AT">Austria</option>
+                    <option value="PL">Poland</option>
+                    <option value="CZ">Czech Republic</option>
+                    <option value="PT">Portugal</option>
+                    <option value="GR">Greece</option>
+                    <option value="IE">Ireland</option>
+                    <option value="KR">South Korea</option>
+                    <option value="TH">Thailand</option>
+                    <option value="MY">Malaysia</option>
+                    <option value="PH">Philippines</option>
+                    <option value="VN">Vietnam</option>
+                    <option value="ID">Indonesia</option>
+                    <option value="PK">Pakistan</option>
+                    <option value="BD">Bangladesh</option>
+                    <option value="LK">Sri Lanka</option>
+                    <option value="EG">Egypt</option>
+                    <option value="NG">Nigeria</option>
+                    <option value="KE">Kenya</option>
+                    <option value="AR">Argentina</option>
+                    <option value="CL">Chile</option>
+                    <option value="CO">Colombia</option>
+                    <option value="PE">Peru</option>
+                    <option value="TR">Turkey</option>
+                    <option value="IL">Israel</option>
+                    <option value="QA">Qatar</option>
+                    <option value="RU">Russia</option>
+                    <option value="UA">Ukraine</option>
+                    <option value="RO">Romania</option>
+                    <option value="BG">Bulgaria</option>
+                    <option value="HR">Croatia</option>
+                  </select>
+                  {touchedFields.country && validationErrors.country && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {validationErrors.country}
+                    </p>
+                  )}
+                </div>
               </div>
             </motion.div>
 
@@ -300,6 +488,7 @@ export default function CheckoutPage() {
                     <StripeCheckoutButton
                       items={cartItems}
                       customerEmail={customerInfo.email}
+                      customerName={customerInfo.name}
                       amount={total}
                       disabled={!isFormValid}
                     />
@@ -313,11 +502,22 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
-                {!isFormValid && (
-                  <p className="text-sm text-red-600 text-center">
-                    Please fill in all required fields to proceed with payment
-                  </p>
-                )}
+                {!isFormValid &&
+                  Object.keys(touchedFields).length > 0 &&
+                  Object.keys(validationErrors).length > 0 && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-700 font-semibold mb-1">
+                        Please complete all required fields:
+                      </p>
+                      <ul className="text-sm text-red-600 list-disc list-inside space-y-1">
+                        {Object.entries(validationErrors)
+                          .filter(([field]) => touchedFields[field])
+                          .map(([field, error]) => (
+                            <li key={field}>{error}</li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
               </div>
             </motion.div>
           </div>
