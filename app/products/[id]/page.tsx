@@ -10,11 +10,17 @@ import {
   TruckIcon,
   ShieldCheckIcon,
   ArrowLeftIcon,
+  HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
-import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
+import {
+  HeartIcon as HeartIconSolid,
+  StarIcon as StarIconSolid,
+} from "@heroicons/react/24/solid";
 import Button from "../../../components/ui/Button";
+import ReviewModal from "../../../components/ui/ReviewModal";
 import toast from "react-hot-toast";
 import { useCart } from "../../../contexts/CartContext";
+import { useAuth } from "../../../contexts/AuthContext";
 
 interface Product {
   id: number;
@@ -42,11 +48,16 @@ export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>("features");
 
   // Fetch product data from Firebase
   useEffect(() => {
@@ -124,6 +135,63 @@ export default function ProductDetailPage() {
     }
   }, [params.id, router]);
 
+  // Fetch reviews
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!product) return;
+
+      setLoadingReviews(true);
+      try {
+        const { reviewsService } = await import(
+          "../../../services/reviews.service"
+        );
+        const result = await reviewsService.getProductReviews(
+          String(product.id)
+        );
+
+        if (result.success && result.reviews) {
+          setReviews(result.reviews);
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
+    fetchReviews();
+  }, [product]);
+
+  const handleRefreshReviews = async () => {
+    if (!product) return;
+
+    try {
+      const { reviewsService } = await import(
+        "../../../services/reviews.service"
+      );
+      const result = await reviewsService.getProductReviews(String(product.id));
+
+      if (result.success && result.reviews) {
+        setReviews(result.reviews);
+        // Update product rating
+        const avgRating =
+          result.reviews.reduce((sum: number, r: any) => sum + r.rating, 0) /
+          result.reviews.length;
+        setProduct((prev) =>
+          prev
+            ? {
+                ...prev,
+                rating: avgRating,
+                reviewCount: result.reviews!.length,
+              }
+            : null
+        );
+      }
+    } catch (error) {
+      console.error("Error refreshing reviews:", error);
+    }
+  };
+
   const handleAddToCart = () => {
     if (!product) return;
 
@@ -139,6 +207,22 @@ export default function ProductDetailPage() {
     toast.success(
       `Added ${quantity} ${quantity > 1 ? "items" : "item"} to cart`
     );
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+
+    // Add product to cart first
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0] || "",
+      quantity: quantity,
+    });
+
+    // Then navigate to checkout
+    router.push("/checkout");
   };
 
   const handleWishlist = () => {
@@ -350,7 +434,7 @@ export default function ProductDetailPage() {
                     Add to Cart
                   </Button>
                   <Button
-                    onClick={() => router.push("/checkout")}
+                    onClick={handleBuyNow}
                     variant="secondary"
                     className="px-8 py-4 text-lg font-semibold"
                   >
@@ -395,29 +479,182 @@ export default function ProductDetailPage() {
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <div className="border-b border-gray-200 mb-8">
               <nav className="-mb-px flex space-x-8">
-                <button className="border-b-2 border-indigo-600 text-indigo-600 py-4 px-1 text-sm font-medium">
+                <button
+                  onClick={() => setActiveTab("features")}
+                  className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "features"
+                      ? "border-indigo-600 text-indigo-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                >
                   Features
                 </button>
-                <button className="border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-4 px-1 text-sm font-medium">
+                <button
+                  onClick={() => setActiveTab("specifications")}
+                  className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "specifications"
+                      ? "border-indigo-600 text-indigo-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                >
                   Specifications
                 </button>
-                <button className="border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-4 px-1 text-sm font-medium">
-                  Reviews ({product.reviewCount})
+                <button
+                  onClick={() => setActiveTab("reviews")}
+                  className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "reviews"
+                      ? "border-indigo-600 text-indigo-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Reviews ({reviews.length})
                 </button>
               </nav>
             </div>
 
-            {/* Features */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {product.features.map((feature, index) => (
-                <div key={index} className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
-                  <span className="text-gray-700">{feature}</span>
+            {/* Features Tab */}
+            {activeTab === "features" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {product.features.map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
+                    <span className="text-gray-700">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Specifications Tab */}
+            {activeTab === "specifications" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(product.specifications).map(
+                  ([key, value], index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between py-3 border-b border-gray-100"
+                    >
+                      <span className="font-medium text-gray-700">{key}</span>
+                      <span className="text-gray-600">{value}</span>
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+
+            {/* Reviews Tab */}
+            {activeTab === "reviews" && (
+              <div className="space-y-6">
+                {/* Write Review Button */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Customer Reviews</h3>
+                  {user ? (
+                    <Button
+                      onClick={() => setShowReviewModal(true)}
+                      variant="outline"
+                      className="flex items-center space-x-2"
+                    >
+                      <StarIconSolid className="w-4 h-4 text-yellow-400" />
+                      <span>Write a Review</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        toast.error("Please sign in to write a review");
+                        router.push("/signin");
+                      }}
+                      variant="outline"
+                    >
+                      Sign in to Review
+                    </Button>
+                  )}
                 </div>
-              ))}
-            </div>
+
+                {/* Reviews List */}
+                {loadingReviews ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                  </div>
+                ) : reviews.length === 0 ? (
+                  <div className="text-center py-12">
+                    <StarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600 text-lg">No reviews yet</p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Be the first to review this product!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {reviews.map((review: any) => (
+                      <div
+                        key={review.id}
+                        className="border-b border-gray-200 pb-6 last:border-0"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="flex items-center space-x-2 mb-2">
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <StarIconSolid
+                                    key={i}
+                                    className={`w-4 h-4 ${
+                                      i < review.rating
+                                        ? "text-yellow-400"
+                                        : "text-gray-300"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              {review.verified && (
+                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                  ✓ Verified Purchase
+                                </span>
+                              )}
+                            </div>
+                            <h4 className="font-semibold text-gray-900">
+                              {review.title}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              By {review.userName} •{" "}
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-gray-700 mb-3">{review.comment}</p>
+                        <button
+                          onClick={async () => {
+                            const { reviewsService } = await import(
+                              "../../../services/reviews.service"
+                            );
+                            await reviewsService.markReviewHelpful(review.id);
+                            handleRefreshReviews();
+                          }}
+                          className="flex items-center space-x-2 text-sm text-gray-500 hover:text-indigo-600 transition-colors"
+                        >
+                          <HandThumbUpIcon className="w-4 h-4" />
+                          <span>Helpful ({review.helpful || 0})</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </motion.div>
+
+        {/* Review Modal */}
+        {user && (
+          <ReviewModal
+            isOpen={showReviewModal}
+            onClose={() => setShowReviewModal(false)}
+            productId={String(product.id)}
+            productName={product.name}
+            userId={user.uid}
+            userName={user.displayName || user.email || "Anonymous"}
+            userEmail={user.email || ""}
+            onReviewSubmitted={handleRefreshReviews}
+          />
+        )}
       </div>
     </div>
   );

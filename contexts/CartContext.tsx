@@ -191,7 +191,8 @@ export const CartProvider = ({ children }: CartProviderProps) => {
 
   // Cart calculations with useMemo for performance
   const getItemCount = useCallback((): number => {
-    return state.items.reduce((total, item) => total + item.quantity, 0);
+    // Return number of unique items, not total quantity
+    return state.items.length;
   }, [state.items]);
 
   const getSubtotal = useCallback((): number => {

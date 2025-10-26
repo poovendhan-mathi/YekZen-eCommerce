@@ -15,6 +15,7 @@ import Input from "../../components/ui/Input";
 import StripeCheckoutButton from "../../components/payments/StripeCheckoutButton";
 import RazorpayButton from "../../components/payments/RazorpayButton";
 import Link from "next/link";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Type definitions
 interface CartItem {
@@ -37,6 +38,7 @@ interface CustomerInfo {
 }
 
 export default function CheckoutPage() {
+  const { user } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: "",
@@ -55,6 +57,19 @@ export default function CheckoutPage() {
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
     {}
   );
+
+  // Pre-fill user details if logged in
+  useEffect(() => {
+    if (user) {
+      setCustomerInfo((prev) => ({
+        ...prev,
+        name: user.displayName || prev.name,
+        email: user.email || prev.email,
+        // Phone can be pre-filled if stored in user profile
+        phone: (user as any).phoneNumber || prev.phone,
+      }));
+    }
+  }, [user]);
 
   // Get cart data from localStorage
   useEffect(() => {

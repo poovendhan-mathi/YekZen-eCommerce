@@ -33,11 +33,8 @@ const Header: React.FC = () => {
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const cartItemsCount =
-    items?.reduce(
-      (total: number, item: { quantity: number }) => total + item.quantity,
-      0
-    ) || 0;
+  // Show number of unique items, not total quantity
+  const cartItemsCount = items?.length || 0;
 
   // Close dropdown when clicking outside
   useEffect(() => {

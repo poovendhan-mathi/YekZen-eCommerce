@@ -214,9 +214,9 @@ describe("CartContext", () => {
         result.current.addToCart(product);
       });
 
-      const savedCart = JSON.parse(localStorage.getItem("yekzen-cart"));
-      expect(savedCart.items).toHaveLength(1);
-      expect(savedCart.items[0].id).toBe("1");
+      const savedCart = JSON.parse(localStorage.getItem("yekzen-cart") || "{}");
+      expect(savedCart?.items || []).toHaveLength(1);
+      expect(savedCart?.items?.[0]?.id).toBe("1");
     });
 
     it("should load cart from localStorage on mount", () => {

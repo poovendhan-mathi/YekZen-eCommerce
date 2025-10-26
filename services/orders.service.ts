@@ -58,7 +58,7 @@ export const ordersService = {
         paymentMethod: orderData.paymentMethod,
         totalAmount: orderData.totalAmount,
         paymentId: orderData.paymentId || null,
-        status: "pending",
+        status: "processing", // Changed from "pending" to "processing" after payment
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -67,7 +67,7 @@ export const ordersService = {
 
       // Update stock for each product
       const stockUpdatePromises = orderData.items.map(async (item) => {
-        const productRef = doc(db, "products", item.id);
+        const productRef = doc(db, "products", String(item.id));
         const productSnap = await getDoc(productRef);
 
         if (productSnap.exists()) {
@@ -83,7 +83,10 @@ export const ordersService = {
             updatedAt: serverTimestamp(),
           });
         } else {
-          throw new Error(`Product ${item.name} not found`);
+          console.warn(
+            `Product ${item.name} (ID: ${item.id}) not found - skipping stock update`
+          );
+          // Don't throw error, just skip stock update for missing products
         }
       });
 
@@ -191,6 +194,9 @@ export const ordersService = {
     error?: string;
   }> {
     try {
+      console.log("🔍 Fetching orders for user email:", userEmail);
+
+      // Query orders for this user
       const ordersQuery = query(
         collection(db, "orders"),
         where("customerInfo.email", "==", userEmail),
@@ -200,8 +206,14 @@ export const ordersService = {
       const querySnapshot = await getDocs(ordersQuery);
       const orders: any[] = [];
 
+      console.log("📦 Found orders count:", querySnapshot.size);
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        console.log("📋 Order data:", {
+          id: doc.id,
+          email: data.customerInfo?.email,
+        });
         orders.push({
           id: doc.id,
           ...data,
@@ -212,12 +224,49 @@ export const ordersService = {
         });
       });
 
+      console.log("✅ Returning orders:", orders.length);
       return {
         success: true,
         orders,
       };
     } catch (error) {
-      console.error("Error fetching user orders:", error);
+      console.error("❌ Error fetching user orders:", error);
+
+      // If there's an index error, try to fetch all orders and filter manually
+      if (error instanceof Error && error.message.includes("index")) {
+        console.log("⚠️ Index error detected, trying manual filter...");
+        try {
+          const allOrdersQuery = query(
+            collection(db, "orders"),
+            orderBy("createdAt", "desc")
+          );
+          const allSnapshot = await getDocs(allOrdersQuery);
+          const orders: any[] = [];
+
+          allSnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.customerInfo?.email === userEmail) {
+              orders.push({
+                id: doc.id,
+                ...data,
+                createdAt:
+                  data.createdAt instanceof Timestamp
+                    ? data.createdAt.toDate().toISOString()
+                    : data.createdAt,
+              });
+            }
+          });
+
+          console.log("✅ Manual filter found:", orders.length, "orders");
+          return {
+            success: true,
+            orders,
+          };
+        } catch (fallbackError) {
+          console.error("❌ Fallback also failed:", fallbackError);
+        }
+      }
+
       return {
         success: false,
         error:
@@ -278,6 +327,93 @@ export const ordersService = {
         success: false,
         error:
           error instanceof Error ? error.message : "Failed to calculate stats",
+      };
+    }
+  },
+
+  /**
+   * Update order status (for admin)
+   */
+  async updateOrderStatus(
+    orderId: string,
+    newStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+  ): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, {
+        status: newStatus,
+        updatedAt: serverTimestamp(),
+      });
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update order status",
+      };
+    }
+  },
+
+  /**
+   * Search orders by customer info or order ID
+   */
+  async searchOrders(searchTerm: string): Promise<{
+    success: boolean;
+    orders?: any[];
+    error?: string;
+  }> {
+    try {
+      // Get all orders first (Firestore doesn't support full-text search natively)
+      const querySnapshot = await getDocs(
+        query(collection(db, "orders"), orderBy("createdAt", "desc"))
+      );
+
+      const orders: any[] = [];
+      const searchLower = searchTerm.toLowerCase();
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const orderId = doc.id.toLowerCase();
+        const customerName = data.customerInfo?.name?.toLowerCase() || "";
+        const customerEmail = data.customerInfo?.email?.toLowerCase() || "";
+
+        // Search in order ID, customer name, or email
+        if (
+          orderId.includes(searchLower) ||
+          customerName.includes(searchLower) ||
+          customerEmail.includes(searchLower)
+        ) {
+          orders.push({
+            id: doc.id,
+            ...data,
+            createdAt:
+              data.createdAt instanceof Timestamp
+                ? data.createdAt.toDate().toISOString()
+                : data.createdAt,
+          });
+        }
+      });
+
+      return {
+        success: true,
+        orders,
+      };
+    } catch (error) {
+      console.error("Error searching orders:", error);
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to search orders",
+        orders: [],
       };
     }
   },

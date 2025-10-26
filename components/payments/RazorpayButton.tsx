@@ -286,6 +286,8 @@ const RazorpayButton: React.FC<RazorpayButtonProps> = ({
           name: customerInfo.name,
           email: customerInfo.email,
         }}
+        currency="INR"
+        paymentType="upi"
       />
     </>
   );

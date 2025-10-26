@@ -19,6 +19,7 @@ import Button from "../../components/ui/Button";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
 import { ordersService } from "../../services/orders.service";
+import { formatCurrency, getUserCurrency } from "../../lib/utils/currency";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
@@ -64,8 +65,15 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const [userCurrency, setUserCurrency] = useState<string>("USD");
   const { user } = useAuth();
   const router = useRouter();
+
+  // Detect user's currency on mount
+  useEffect(() => {
+    const currency = getUserCurrency();
+    setUserCurrency(currency);
+  }, []);
 
   // Fetch real orders from Firebase
   useEffect(() => {
@@ -179,6 +187,8 @@ export default function OrdersPage() {
         return <TruckIcon className="w-5 h-5 text-blue-500" />;
       case "processing":
         return <ClockIcon className="w-5 h-5 text-yellow-500" />;
+      case "pending":
+        return <ArrowPathIcon className="w-5 h-5 text-orange-500" />;
       case "cancelled":
         return <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />;
       default:
@@ -194,10 +204,12 @@ export default function OrdersPage() {
         return "Shipped";
       case "processing":
         return "Processing";
+      case "pending":
+        return "Pending";
       case "cancelled":
         return "Cancelled";
       default:
-        return "Unknown";
+        return "Processing"; // Default to Processing instead of Unknown
     }
   };
 
@@ -209,10 +221,12 @@ export default function OrdersPage() {
         return "bg-blue-100 text-blue-800";
       case "processing":
         return "bg-yellow-100 text-yellow-800";
+      case "pending":
+        return "bg-orange-100 text-orange-800";
       case "cancelled":
         return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-yellow-100 text-yellow-800"; // Default to Processing style
     }
   };
 
@@ -347,7 +361,7 @@ export default function OrdersPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-gray-900">
-                          ${order.total.toFixed(2)}
+                          {formatCurrency(order.total, userCurrency)}
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <CalendarIcon className="w-4 h-4 mr-1" />
@@ -447,10 +461,13 @@ export default function OrdersPage() {
                           </div>
                           <div className="text-right">
                             <div className="font-medium text-gray-900">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              {formatCurrency(
+                                item.price * item.quantity,
+                                userCurrency
+                              )}
                             </div>
                             <div className="text-sm text-gray-600">
-                              ${item.price.toFixed(2)} each
+                              {formatCurrency(item.price, userCurrency)} each
                             </div>
                           </div>
                         </div>

@@ -1,4 +1,4 @@
-// Goal: Payment success page with order confirmation and animations
+// Goal: Payment success page with detailed invoice, GST/tax breakdown, and print functionality
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,9 +8,12 @@ import {
   CheckCircleIcon,
   ShoppingBagIcon,
   ArrowRightIcon,
+  PrinterIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import Button from "../../../components/ui/Button";
+import { formatCurrency } from "../../../lib/utils/currency";
 
 interface OrderItem {
   name: string;
@@ -20,15 +23,24 @@ interface OrderItem {
 
 interface OrderDetails {
   orderId: string;
-  amount: number;
+  subtotal: number;
+  tax: number;
+  gst: number;
+  shipping: number;
+  discount: number;
+  total: number;
   currency: string;
   paymentMethod: string;
   items: OrderItem[];
   shippingAddress: {
     name: string;
     address: string;
+    city: string;
+    postalCode: string;
+    country: string;
   };
   estimatedDelivery: string;
+  orderDate: string;
 }
 
 const PaymentSuccessPage = () => {
@@ -37,6 +49,10 @@ const PaymentSuccessPage = () => {
   const [loading, setLoading] = useState(true);
   const orderId = searchParams.get("orderId");
   const method = searchParams.get("method");
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -50,10 +66,35 @@ const PaymentSuccessPage = () => {
 
           if (result.success && result.order) {
             const order = result.order;
+            
+            // Determine currency based on payment method
+            const paymentCurrency = method === "stripe" ? "USD" : "INR";
+            
+            // Calculate subtotal from items
+            const itemsSubtotal = order.items.reduce(
+              (sum: number, item: any) => sum + item.price * item.quantity,
+              0
+            );
+            
+            // Calculate taxes and fees (realistic breakdown)
+            const gstRate = paymentCurrency === "INR" ? 0.18 : 0; // 18% GST for India
+            const taxRate = paymentCurrency === "USD" ? 0.08 : 0; // 8% tax for US
+            const shippingCost = paymentCurrency === "INR" ? 50 : 5; // Flat shipping
+            const discount = 0; // No discount for now
+            
+            const gst = gstRate * itemsSubtotal;
+            const tax = taxRate * itemsSubtotal;
+            const total = itemsSubtotal + gst + tax + shippingCost - discount;
+            
             setOrderDetails({
               orderId: order.id,
-              amount: order.totalAmount,
-              currency: method === "stripe" ? "USD" : "INR",
+              subtotal: itemsSubtotal,
+              tax: tax,
+              gst: gst,
+              shipping: shippingCost,
+              discount: discount,
+              total: total,
+              currency: paymentCurrency,
               paymentMethod: order.paymentMethod,
               items: order.items.map((item: any) => ({
                 name: item.name,
@@ -62,11 +103,15 @@ const PaymentSuccessPage = () => {
               })),
               shippingAddress: {
                 name: order.customerInfo?.name || "Customer",
-                address: order.customerInfo?.address || "Address on file",
+                address: order.customerInfo?.address || "Address not provided",
+                city: order.customerInfo?.city || "",
+                postalCode: order.customerInfo?.postalCode || "",
+                country: order.customerInfo?.country || "",
               },
               estimatedDelivery: new Date(
                 Date.now() + 5 * 24 * 60 * 60 * 1000
               ).toLocaleDateString(),
+              orderDate: new Date().toLocaleDateString(),
             });
           }
         } catch (error) {
@@ -105,16 +150,27 @@ const PaymentSuccessPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 py-12 print:bg-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Print Button - Hidden on print */}
+        <div className="flex justify-end mb-4 print:hidden">
+          <Button
+            onClick={handlePrint}
+            className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700"
+          >
+            <PrinterIcon className="w-5 h-5" />
+            <span>Print Invoice</span>
+          </Button>
+        </div>
+
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           className="text-center"
         >
-          {/* Success Icon */}
-          <motion.div variants={itemVariants} className="mb-8">
+          {/* Success Icon - Hidden on print */}
+          <motion.div variants={itemVariants} className="mb-8 print:hidden">
             <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircleIcon className="w-12 h-12 text-green-600" />
             </div>
@@ -129,97 +185,165 @@ const PaymentSuccessPage = () => {
             </motion.p>
           </motion.div>
 
-          {/* Order Details Card */}
+          {/* Invoice - Main Content */}
           <motion.div
             variants={itemVariants}
-            className="bg-white rounded-2xl shadow-xl p-8 mb-8 text-left"
+            className="bg-white rounded-2xl shadow-xl p-8 mb-8 text-left print:shadow-none"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Order Details
-              </h2>
-              <span className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
-                Confirmed
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Order Info */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">
-                  Order Information
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Order ID:</span>
-                    <span className="font-medium">{orderDetails.orderId}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Payment Method:</span>
-                    <span className="font-medium">
-                      {orderDetails.paymentMethod}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Amount:</span>
-                    <span className="font-bold text-lg">
-                      {orderDetails.currency === "USD" ? "$" : "₹"}
-                      {orderDetails.amount.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Estimated Delivery:</span>
-                    <span className="font-medium">
-                      {orderDetails.estimatedDelivery}
-                    </span>
-                  </div>
+            {/* Invoice Header */}
+            <div className="border-b border-gray-200 pb-6 mb-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    INVOICE
+                  </h2>
+                  <p className="text-gray-600">Order #{orderDetails.orderId}</p>
+                  <p className="text-sm text-gray-500">Date: {orderDetails.orderDate}</p>
                 </div>
-              </div>
-
-              {/* Items */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">
-                  Items Ordered
-                </h3>
-                <div className="space-y-3">
-                  {orderDetails.items.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center"
-                    >
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-gray-600">
-                          Qty: {item.quantity}
-                        </p>
-                      </div>
-                      <span className="font-medium">
-                        {orderDetails.currency === "USD" ? "$" : "₹"}
-                        {item.price.toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
+                <div className="text-right">
+                  <h3 className="text-lg font-bold text-gray-900">YekZen eCommerce</h3>
+                  <p className="text-sm text-gray-600">123 Business Street</p>
+                  <p className="text-sm text-gray-600">Tech City, TC 12345</p>
+                  <p className="text-sm text-gray-600">GST: 29ABCDE1234F1Z5</p>
                 </div>
               </div>
             </div>
 
-            {/* Shipping Address */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-3">
-                Shipping Address
-              </h3>
+            {/* Bill To */}
+            <div className="mb-6">
+              <h3 className="font-semibold text-gray-900 mb-3">Bill To:</h3>
+              <p className="text-gray-700 font-medium">{orderDetails.shippingAddress.name}</p>
+              <p className="text-gray-600">{orderDetails.shippingAddress.address}</p>
               <p className="text-gray-600">
-                {orderDetails.shippingAddress.name}
-                <br />
-                {orderDetails.shippingAddress.address}
+                {orderDetails.shippingAddress.city} {orderDetails.shippingAddress.postalCode}
               </p>
+              <p className="text-gray-600">{orderDetails.shippingAddress.country}</p>
+            </div>
+
+            {/* Items Table */}
+            <div className="mb-6">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Item
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Qty
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {orderDetails.items.map((item, index) => (
+                    <tr key={index}>
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                        {item.name}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-600 text-center">
+                        {item.quantity}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-600 text-right">
+                        {formatCurrency(item.price, orderDetails.currency)}
+                      </td>
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900 text-right">
+                        {formatCurrency(
+                          item.price * item.quantity,
+                          orderDetails.currency
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Price Breakdown */}
+            <div className="border-t border-gray-200 pt-6">
+              <div className="space-y-3 max-w-sm ml-auto">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium text-gray-900">
+                    {formatCurrency(orderDetails.subtotal, orderDetails.currency)}
+                  </span>
+                </div>
+                
+                {orderDetails.gst > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">GST (18%):</span>
+                    <span className="font-medium text-gray-900">
+                      {formatCurrency(orderDetails.gst, orderDetails.currency)}
+                    </span>
+                  </div>
+                )}
+                
+                {orderDetails.tax > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Tax (8%):</span>
+                    <span className="font-medium text-gray-900">
+                      {formatCurrency(orderDetails.tax, orderDetails.currency)}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Shipping:</span>
+                  <span className="font-medium text-gray-900">
+                    {formatCurrency(orderDetails.shipping, orderDetails.currency)}
+                  </span>
+                </div>
+                
+                {orderDetails.discount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Discount:</span>
+                    <span className="font-medium">
+                      -{formatCurrency(orderDetails.discount, orderDetails.currency)}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-3">
+                  <span className="text-gray-900">Total Amount:</span>
+                  <span className="text-gray-900">
+                    {formatCurrency(orderDetails.total, orderDetails.currency)}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between text-sm bg-green-50 p-3 rounded-lg">
+                  <span className="text-green-800 font-medium">Payment Status:</span>
+                  <span className="text-green-800 font-bold">PAID</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Payment Method:</span>
+                  <span className="font-medium text-gray-900">
+                    {orderDetails.paymentMethod}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Estimated Delivery */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Estimated Delivery</h3>
+                  <p className="text-gray-600">{orderDetails.estimatedDelivery}</p>
+                </div>
+                <DocumentTextIcon className="w-12 h-12 text-gray-300" />
+              </div>
             </div>
           </motion.div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Hidden on print */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-4 justify-center print:hidden"
           >
             <Link href="/orders">
               <Button className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700">

@@ -12,8 +12,10 @@ import {
   CurrencyDollarIcon,
   UserIcon,
   ArrowLeftIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import Button from "../../../components/ui/Button";
+import Input from "../../../components/ui/Input";
 
 interface Order {
   id: string;
@@ -35,7 +37,12 @@ interface Order {
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState<Record<string, boolean>>(
+    {}
+  );
   const { user } = useAuth();
   const router = useRouter();
 
@@ -77,6 +84,57 @@ export default function AdminOrdersPage() {
 
     fetchOrders();
   }, [user, router]);
+
+  // Filter orders based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredOrders(orders);
+      return;
+    }
+
+    const filtered = orders.filter((order) => {
+      const searchLower = searchTerm.toLowerCase();
+      const orderId = order.id.toLowerCase();
+      const customerName = order.customerInfo?.name?.toLowerCase() || "";
+      const customerEmail = order.customerInfo?.email?.toLowerCase() || "";
+
+      return (
+        orderId.includes(searchLower) ||
+        customerName.includes(searchLower) ||
+        customerEmail.includes(searchLower)
+      );
+    });
+
+    setFilteredOrders(filtered);
+  }, [searchTerm, orders]);
+
+  const handleStatusUpdate = async (
+    orderId: string,
+    newStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+  ) => {
+    setUpdatingStatus((prev) => ({ ...prev, [orderId]: true }));
+
+    try {
+      const result = await ordersService.updateOrderStatus(orderId, newStatus);
+
+      if (result.success) {
+        // Update local state
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === orderId ? { ...order, status: newStatus } : order
+          )
+        );
+        toast.success(`Order status updated to ${newStatus}`);
+      } else {
+        toast.error(result.error || "Failed to update order status");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update order status");
+    } finally {
+      setUpdatingStatus((prev) => ({ ...prev, [orderId]: false }));
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -130,9 +188,31 @@ export default function AdminOrdersPage() {
             </div>
           </div>
 
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search by order ID, customer name, or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-full md:w-96"
+              />
+            </div>
+          </div>
+
           {/* Orders List */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            {orders.length === 0 ? (
+            {filteredOrders.length === 0 && searchTerm ? (
+              <div className="p-12 text-center">
+                <MagnifyingGlassIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 text-lg">No orders found</p>
+                <p className="text-gray-500 text-sm mt-2">
+                  Try adjusting your search term
+                </p>
+              </div>
+            ) : filteredOrders.length === 0 ? (
               <div className="p-12 text-center">
                 <ShoppingBagIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600 text-lg">No orders yet</p>
@@ -169,7 +249,7 @@ export default function AdminOrdersPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {orders.map((order) => (
+                    {filteredOrders.map((order) => (
                       <motion.tr
                         key={order.id}
                         initial={{ opacity: 0 }}
@@ -211,14 +291,29 @@ export default function AdminOrdersPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                          <select
+                            value={order.status}
+                            onChange={(e) =>
+                              handleStatusUpdate(
+                                order.id,
+                                e.target.value as any
+                              )
+                            }
+                            disabled={updatingStatus[order.id]}
+                            className={`inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium border-2 transition-all ${getStatusColor(
                               order.status
-                            )}`}
+                            )} ${
+                              updatingStatus[order.id]
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer hover:shadow-md"
+                            }`}
                           >
-                            {order.status?.charAt(0).toUpperCase() +
-                              order.status?.slice(1) || "Unknown"}
-                          </span>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {order.paymentMethod || "N/A"}

@@ -182,6 +182,8 @@ const StripeCheckoutButton: React.FC<StripeCheckoutButtonProps> = ({
           name: customerName,
           email: customerEmail || "",
         }}
+        currency="USD"
+        paymentType="card"
       />
     </>
   );
