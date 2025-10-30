@@ -1,7 +1,8 @@
 // Goal: Enhanced user profile page with account management and address book
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   UserIcon,
@@ -13,8 +14,11 @@ import {
 } from "@heroicons/react/24/outline";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import { useAuth } from "../../contexts/AuthContext";
 
 const ProfilePage = () => {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     displayName: "John Doe",
@@ -24,12 +28,29 @@ const ProfilePage = () => {
     address: "123 Main St, City, State 12345",
   });
 
-  // Mock user data
-  const user = {
-    displayName: "John Doe",
-    email: "john.doe@example.com",
-    metadata: { creationTime: new Date().toISOString() },
-  };
+  // Protected route - redirect if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/signin?redirect=/profile");
+    }
+  }, [user, loading, router]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -80,7 +101,9 @@ const ProfilePage = () => {
                 <p className="text-purple-100 mt-2">{user?.email}</p>
                 <p className="text-purple-100 text-sm">
                   Member since{" "}
-                  {new Date(user?.metadata?.creationTime).toLocaleDateString()}
+                  {user?.metadata?.creationTime
+                    ? new Date(user.metadata.creationTime).toLocaleDateString()
+                    : "N/A"}
                 </p>
               </div>
             </div>

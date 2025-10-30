@@ -16,6 +16,7 @@ import StripeCheckoutButton from "../../components/payments/StripeCheckoutButton
 import RazorpayButton from "../../components/payments/RazorpayButton";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
+import { isIndianUser } from "../../components/layout/RegionSelector";
 
 // Type definitions
 interface CartItem {
@@ -477,24 +478,27 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div
-                    onClick={() => setSelectedPaymentMethod("razorpay")}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      selectedPaymentMethod === "razorpay"
-                        ? "border-green-500 bg-green-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="w-8 h-8 mx-auto mb-2 bg-green-600 rounded text-white flex items-center justify-center text-sm font-bold">
-                        UPI
+                  {/* UPI - Only show for Indian users */}
+                  {isIndianUser() && (
+                    <div
+                      onClick={() => setSelectedPaymentMethod("razorpay")}
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        selectedPaymentMethod === "razorpay"
+                          ? "border-green-500 bg-green-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="w-8 h-8 mx-auto mb-2 bg-green-600 rounded text-white flex items-center justify-center text-sm font-bold">
+                          UPI
+                        </div>
+                        <h3 className="font-medium">UPI</h3>
+                        <p className="text-sm text-gray-600">
+                          UPI, NetBanking, Wallets
+                        </p>
                       </div>
-                      <h3 className="font-medium">UPI & Indian Methods</h3>
-                      <p className="text-sm text-gray-600">
-                        UPI, NetBanking, Wallets
-                      </p>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Payment Buttons */}

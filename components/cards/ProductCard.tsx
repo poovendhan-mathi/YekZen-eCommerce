@@ -10,6 +10,7 @@ import {
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
 import Button from "../ui/Button";
+import Price, { OriginalPrice, Discount } from "../ui/Price";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "../../contexts/CartContext";
@@ -305,13 +306,21 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           {/* Price */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <span className="text-lg font-bold text-gray-900">
-                ${product.price}
-              </span>
+              <Price
+                amount={product.price}
+                className="text-lg font-bold text-gray-900"
+              />
               {product.originalPrice && (
-                <span className="text-sm text-gray-500 line-through">
-                  ${product.originalPrice}
-                </span>
+                <OriginalPrice
+                  amount={product.originalPrice}
+                  className="text-sm text-gray-500"
+                />
+              )}
+              {product.originalPrice && (
+                <Discount
+                  original={product.originalPrice}
+                  current={product.price}
+                />
               )}
             </div>
             {product.stockCount &&

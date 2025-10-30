@@ -10,6 +10,7 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import Button from "../../components/ui/Button";
+import Price from "../../components/ui/Price";
 import Link from "next/link";
 import { useCart } from "../../contexts/CartContext";
 import Image from "next/image";
@@ -98,9 +99,10 @@ export default function CartPage() {
                   <h3 className="font-semibold text-gray-900 mb-1">
                     {item.name}
                   </h3>
-                  <p className="text-blue-600 font-bold">
-                    ${item.price.toFixed(2)}
-                  </p>
+                  <Price
+                    amount={item.price}
+                    className="text-blue-600 font-bold"
+                  />
 
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-3 mt-3">
@@ -140,9 +142,10 @@ export default function CartPage() {
 
                 {/* Item Total */}
                 <div className="text-right">
-                  <p className="text-lg font-bold text-gray-900">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </p>
+                  <Price
+                    amount={item.price * item.quantity}
+                    className="text-lg font-bold text-gray-900"
+                  />
                 </div>
               </motion.div>
             ))}
@@ -172,7 +175,7 @@ export default function CartPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span className="font-medium">${subtotal.toFixed(2)}</span>
+                  <Price amount={subtotal} className="font-medium" />
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
@@ -180,7 +183,7 @@ export default function CartPage() {
                 </div>
                 <div className="border-t pt-3 flex justify-between text-lg font-bold text-gray-900">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <Price amount={total} className="font-bold" />
                 </div>
               </div>
 

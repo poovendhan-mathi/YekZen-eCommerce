@@ -183,7 +183,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error("Sign up error:", error);
       const message = error instanceof Error ? error.message : "Sign up failed";
-      toast.error(message);
+      // Don't show toast - let the page component show inline error
       return { success: false, error: message };
     } finally {
       setLoading(false);
@@ -212,7 +212,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error("Sign in error:", error);
       const message = error instanceof Error ? error.message : "Sign in failed";
-      toast.error(message);
+      // Don't show toast - let the page component show inline error
       return { success: false, error: message };
     } finally {
       setLoading(false);
@@ -241,7 +241,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error("Google sign-in error:", error);
       const message =
         error instanceof Error ? error.message : "Google sign-in failed";
-      toast.error(message);
+      // Don't show toast - let the page component show inline error
       return { success: false, error: message };
     } finally {
       setLoading(false);
@@ -270,7 +270,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error("Facebook sign-in error:", error);
       const message =
         error instanceof Error ? error.message : "Facebook sign-in failed";
-      toast.error(message);
+      // Don't show toast - let the page component show inline error
       return { success: false, error: message };
     } finally {
       setLoading(false);

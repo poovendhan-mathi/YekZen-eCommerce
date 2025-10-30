@@ -1,0 +1,63 @@
+# Playwright Test Results
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Test artifacts
+*.png
+*.jpg
+*.webm
+*.mp4
+trace.zip
+
+# HTML Reports
+**/test-results/
+**/playwright-report/
+
+# Video recordings
+videos/
+
+# Screenshots
+screenshots/
+
+# Trace files
+traces/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Node modules (if any local testing packages)
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.test
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# Mock data generated during tests
+mock-data-*.json
+
+# Session storage
+session-*.json

@@ -32,5 +32,13 @@ pids/
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Test results (Playwright)
+test-results/
+playwright-report/
+playwright/.cache/
+*.png
+*.webm
+*.mp4
+
 # Vercel
 .vercel

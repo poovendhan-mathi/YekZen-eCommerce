@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Button from "../ui/Button";
 import AuthModal from "../auth/AuthModal";
+import RegionSelector from "./RegionSelector";
 import { useCart } from "../../contexts/CartContext";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -153,6 +154,9 @@ const Header: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center space-x-3"
             >
+              {/* Region Selector */}
+              <RegionSelector />
+
               {/* Cart */}
               <Link
                 href="/cart"
@@ -175,6 +179,7 @@ const Header: React.FC = () => {
                 {user ? (
                   <div className="relative" ref={dropdownRef}>
                     <button
+                      id="user-profile-button"
                       onClick={() =>
                         setShowProfileDropdown(!showProfileDropdown)
                       }
@@ -274,6 +279,7 @@ const Header: React.FC = () => {
 
                           <div className="border-t border-gray-200 mt-2 pt-2">
                             <button
+                              id="logout-button"
                               onClick={handleLogout}
                               className="flex items-center space-x-3 px-4 py-2.5 hover:bg-red-50 transition-colors w-full"
                             >

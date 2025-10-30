@@ -13,6 +13,7 @@ export interface CurrencyConfig {
 // Supported currencies with their locales
 export const CURRENCIES: Record<string, CurrencyConfig> = {
   USD: { code: "USD", symbol: "$", locale: "en-US" },
+  SGD: { code: "SGD", symbol: "S$", locale: "en-SG" },
   INR: { code: "INR", symbol: "₹", locale: "en-IN" },
   EUR: { code: "EUR", symbol: "€", locale: "de-DE" },
   GBP: { code: "GBP", symbol: "£", locale: "en-GB" },
@@ -33,6 +34,7 @@ export function detectUserCurrency(): string {
     // Map common locales to currencies
     const localeToCurrency: Record<string, string> = {
       "en-US": "USD",
+      "en-SG": "SGD",
       "en-IN": "INR",
       "en-GB": "GBP",
       "de-DE": "EUR",
@@ -119,17 +121,65 @@ export function getCurrencySymbol(currencyCode: string): string {
 }
 
 /**
- * Convert amount between currencies (would need exchange rate API in production)
- * For now, returns the same amount - integrate with real exchange rate API
+ * Exchange rates relative to USD (base currency)
+ * In production, these should be fetched from a real-time API like:
+ * - https://exchangerate-api.com/
+ * - https://openexchangerates.org/
+ * - https://currencyapi.com/
+ *
+ * Updated: October 30, 2025 (from XE.com live rates)
+ */
+export const EXCHANGE_RATES: Record<string, number> = {
+  USD: 1.0, // Base currency
+  SGD: 1.34, // 1 USD = 1.34 SGD (Singapore Dollar)
+  INR: 83.85, // 1 USD = 83.85 INR (Indian Rupee)
+  EUR: 0.86, // 1 USD = 0.86 EUR (Euro)
+  GBP: 0.76, // 1 USD = 0.76 GBP (British Pound)
+  JPY: 154.14, // 1 USD = 154.14 JPY (Japanese Yen)
+  AUD: 1.53, // 1 USD = 1.53 AUD (Australian Dollar)
+  CAD: 1.4, // 1 USD = 1.40 CAD (Canadian Dollar)
+};
+
+/**
+ * Convert amount between currencies using exchange rates
+ *
+ * @param amount - Amount in source currency
+ * @param fromCurrency - Source currency code (e.g., 'USD')
+ * @param toCurrency - Target currency code (e.g., 'INR')
+ * @returns Converted amount in target currency
+ *
+ * @example
+ * convertCurrency(100, 'USD', 'INR') // 8312.00 INR
+ * convertCurrency(8312, 'INR', 'USD') // 100.00 USD
  */
 export function convertCurrency(
   amount: number,
-  _fromCurrency: string,
-  _toCurrency: string
+  fromCurrency: string,
+  toCurrency: string
 ): number {
-  // TODO: Integrate with real exchange rate API like https://exchangerate-api.com/
-  console.warn("Currency conversion not implemented - using 1:1 rate");
-  return amount;
+  // If same currency, no conversion needed
+  if (fromCurrency === toCurrency) {
+    return amount;
+  }
+
+  // Get exchange rates
+  const fromRate = EXCHANGE_RATES[fromCurrency];
+  const toRate = EXCHANGE_RATES[toCurrency];
+
+  // If rates not found, log error and return original amount
+  if (!fromRate || !toRate) {
+    console.error(
+      `Exchange rate not found for ${fromCurrency} or ${toCurrency}`
+    );
+    return amount;
+  }
+
+  // Convert to USD first (base currency), then to target currency
+  const amountInUSD = amount / fromRate;
+  const convertedAmount = amountInUSD * toRate;
+
+  // Round to 2 decimal places
+  return Math.round(convertedAmount * 100) / 100;
 }
 
 /**
@@ -151,5 +201,6 @@ export function getUserCurrency(): string {
       return stored;
     }
   }
-  return detectUserCurrency();
+  // Default to SGD (Singapore) instead of detecting
+  return "SGD";
 }

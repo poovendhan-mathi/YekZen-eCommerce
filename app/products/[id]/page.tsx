@@ -17,10 +17,12 @@ import {
   StarIcon as StarIconSolid,
 } from "@heroicons/react/24/solid";
 import Button from "../../../components/ui/Button";
+import Price, { OriginalPrice, Discount } from "../../../components/ui/Price";
 import ReviewModal from "../../../components/ui/ReviewModal";
 import toast from "react-hot-toast";
 import { useCart } from "../../../contexts/CartContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useCurrency } from "../../../contexts/CurrencyContext";
 
 interface Product {
   id: number;
@@ -359,18 +361,21 @@ export default function ProductDetailPage() {
 
               {/* Price */}
               <div className="flex items-center space-x-4 mb-6">
-                <span className="text-3xl font-bold text-gray-900">
-                  ${product.price}
-                </span>
+                <Price
+                  amount={product.price}
+                  className="text-3xl font-bold text-gray-900"
+                />
                 {product.originalPrice > product.price && (
-                  <span className="text-xl text-gray-500 line-through">
-                    ${product.originalPrice}
-                  </span>
+                  <OriginalPrice
+                    amount={product.originalPrice}
+                    className="text-xl text-gray-500"
+                  />
                 )}
                 {product.originalPrice > product.price && (
-                  <span className="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                    Save ${(product.originalPrice - product.price).toFixed(2)}
-                  </span>
+                  <Discount
+                    original={product.originalPrice}
+                    current={product.price}
+                  />
                 )}
               </div>
 

@@ -13,7 +13,11 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import Button from "../../../components/ui/Button";
-import { formatCurrency } from "../../../lib/utils/currency";
+import {
+  formatCurrency,
+  convertCurrency,
+  getUserCurrency,
+} from "../../../lib/utils/currency";
 
 interface OrderItem {
   name: string;
@@ -67,24 +71,46 @@ const PaymentSuccessContent = () => {
           if (result.success && result.order) {
             const order = result.order;
 
-            // Determine currency based on payment method
-            const paymentCurrency = method === "stripe" ? "USD" : "INR";
+            // Determine display currency based on user locale (not payment method)
+            // This ensures currency is always shown correctly regardless of payment gateway
+            const displayCurrency = getUserCurrency();
 
-            // Calculate subtotal from items
-            const itemsSubtotal = order.items.reduce(
+            // All prices in database are stored in USD (base currency)
+            const baseCurrency = "USD";
+
+            // Convert item prices from USD to display currency
+            const convertedItems = order.items.map((item: any) => ({
+              name: item.name,
+              quantity: item.quantity,
+              // Convert price from USD to display currency
+              price: convertCurrency(item.price, baseCurrency, displayCurrency),
+            }));
+
+            // Calculate subtotal in display currency
+            const itemsSubtotal = convertedItems.reduce(
               (sum: number, item: any) => sum + item.price * item.quantity,
               0
             );
 
-            // Calculate taxes and fees (realistic breakdown)
-            const gstRate = paymentCurrency === "INR" ? 0.18 : 0; // 18% GST for India
-            const taxRate = paymentCurrency === "USD" ? 0.08 : 0; // 8% tax for US
-            const shippingCost = paymentCurrency === "INR" ? 50 : 5; // Flat shipping
+            // Calculate taxes and fees based on display currency
+            const gstRate = displayCurrency === "INR" ? 0.18 : 0; // 18% GST for India
+            const taxRate = displayCurrency === "USD" ? 0.08 : 0; // 8% tax for US
+
+            // Shipping cost in display currency
+            const shippingCost = convertCurrency(
+              5, // Base shipping in USD
+              baseCurrency,
+              displayCurrency
+            );
+
             const discount = 0; // No discount for now
 
-            const gst = gstRate * itemsSubtotal;
-            const tax = taxRate * itemsSubtotal;
-            const total = itemsSubtotal + gst + tax + shippingCost - discount;
+            const gst = Math.round(gstRate * itemsSubtotal * 100) / 100;
+            const tax = Math.round(taxRate * itemsSubtotal * 100) / 100;
+            const total =
+              Math.round(
+                (itemsSubtotal + gst + tax + shippingCost - discount) * 100
+              ) / 100;
 
             setOrderDetails({
               orderId: order.id,
@@ -94,13 +120,9 @@ const PaymentSuccessContent = () => {
               shipping: shippingCost,
               discount: discount,
               total: total,
-              currency: paymentCurrency,
+              currency: displayCurrency,
               paymentMethod: order.paymentMethod,
-              items: order.items.map((item: any) => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price,
-              })),
+              items: convertedItems,
               shippingAddress: {
                 name: order.customerInfo?.name || "Customer",
                 address: order.customerInfo?.address || "Address not provided",

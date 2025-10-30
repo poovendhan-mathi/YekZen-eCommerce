@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import dbService from "../../services/database";
 import toast from "react-hot-toast";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 interface AuthResult {
   success: boolean;
@@ -16,6 +17,7 @@ interface AuthResult {
 function SignInPageContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -108,13 +110,45 @@ function SignInPageContent() {
       if (res.success) {
         await handlePostLogin(res);
       } else {
-        setError(res.error || "Sign in failed");
+        // Format Firebase error messages to be user-friendly
+        const errorMessage = formatAuthError(res.error || "Sign in failed");
+        setError(errorMessage);
       }
     } catch (err) {
-      setError((err as Error).message || "Sign in failed");
+      const errorMessage = formatAuthError(
+        (err as Error).message || "Sign in failed"
+      );
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to format Firebase authentication errors
+  const formatAuthError = (error: string): string => {
+    if (error.includes("auth/user-not-found")) {
+      return "No account found with this email address. Please sign up first.";
+    }
+    if (error.includes("auth/wrong-password")) {
+      return "Incorrect password. Please try again or reset your password.";
+    }
+    if (error.includes("auth/invalid-email")) {
+      return "Invalid email address format. Please check and try again.";
+    }
+    if (error.includes("auth/user-disabled")) {
+      return "This account has been disabled. Please contact support.";
+    }
+    if (error.includes("auth/too-many-requests")) {
+      return "Too many failed attempts. Please try again later or reset your password.";
+    }
+    if (error.includes("auth/network-request-failed")) {
+      return "Network error. Please check your internet connection and try again.";
+    }
+    if (error.includes("auth/invalid-credential")) {
+      return "Invalid email or password. Please check your credentials and try again.";
+    }
+    // Return the original error if no match
+    return error;
   };
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -141,7 +175,10 @@ function SignInPageContent() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div
+              id="signin-error"
+              className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"
+            >
               {error}
             </div>
           )}
@@ -175,18 +212,31 @@ function SignInPageContent() {
               >
                 Password
               </label>
-              <div className="mt-1">
+              <div className="mt-1 relative">
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter your password"
                 />
+                <button
+                  type="button"
+                  id="toggle-password-visibility"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -218,6 +268,7 @@ function SignInPageContent() {
 
             <div>
               <button
+                id="signin-submit-button"
                 type="submit"
                 disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 disabled:opacity-50"

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -12,6 +13,8 @@ export default function SignUpPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,21 +30,77 @@ export default function SignUpPage() {
     setError("");
 
     try {
-      if (formData.password !== formData.confirmPassword) {
-        setError("Passwords don't match");
+      // Validate all fields are filled
+      if (!formData.name.trim()) {
+        setError("Please enter your full name");
         return;
       }
 
-      if (formData.name && formData.email && formData.password) {
-        // Store user info in localStorage
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            email: formData.email,
-            name: formData.name,
-            id: Date.now().toString(),
-          })
+      if (!formData.email.trim()) {
+        setError("Please enter your email address");
+        return;
+      }
+
+      if (!formData.password) {
+        setError("Please enter a password");
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError("Please enter a valid email address");
+        return;
+      }
+
+      // Validate password length (minimum 6 characters)
+      if (formData.password.length < 6) {
+        setError("Password must be at least 6 characters long");
+        return;
+      }
+
+      // Validate password confirmation
+      if (formData.password !== formData.confirmPassword) {
+        setError(
+          "Passwords don't match. Please make sure both passwords are the same."
         );
+        return;
+      }
+
+      // Check if email already exists in localStorage
+      const existingUsers = localStorage.getItem("users");
+      if (existingUsers) {
+        const users = JSON.parse(existingUsers);
+        const emailExists = users.some(
+          (user: any) =>
+            user.email.toLowerCase() === formData.email.toLowerCase()
+        );
+        if (emailExists) {
+          setError(
+            "This email is already registered. Please use a different email or sign in."
+          );
+          return;
+        }
+      }
+
+      if (formData.name && formData.email && formData.password) {
+        // Get existing users or create new array
+        const existingUsers = localStorage.getItem("users");
+        const users = existingUsers ? JSON.parse(existingUsers) : [];
+
+        // Add new user
+        const newUser = {
+          email: formData.email,
+          name: formData.name,
+          id: Date.now().toString(),
+        };
+        users.push(newUser);
+
+        // Store updated users list
+        localStorage.setItem("users", JSON.stringify(users));
+
+        // Store current user
+        localStorage.setItem("user", JSON.stringify(newUser));
 
         // Redirect to home
         router.push("/");
@@ -79,7 +138,10 @@ export default function SignUpPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div
+              id="signup-error"
+              className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"
+            >
               {error}
             </div>
           )}
@@ -135,18 +197,31 @@ export default function SignUpPage() {
               >
                 Password
               </label>
-              <div className="mt-1">
+              <div className="mt-1 relative">
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Create a password"
                 />
+                <button
+                  type="button"
+                  id="toggle-password-visibility"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -157,18 +232,31 @@ export default function SignUpPage() {
               >
                 Confirm password
               </label>
-              <div className="mt-1">
+              <div className="mt-1 relative">
                 <input
                   id="confirm-password"
                   name="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Confirm your password"
                 />
+                <button
+                  type="button"
+                  id="toggle-confirm-password-visibility"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  aria-label="Toggle confirm password visibility"
+                >
+                  {showConfirmPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -201,6 +289,7 @@ export default function SignUpPage() {
             <div>
               <button
                 type="submit"
+                id="signup-submit-button"
                 disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 disabled:opacity-50"
               >
