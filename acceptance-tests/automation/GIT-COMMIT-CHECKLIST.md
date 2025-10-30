@@ -3,6 +3,7 @@
 ## ✅ Files Ready to Commit
 
 ### Test Automation Files:
+
 - [x] `acceptance-tests/automation/.gitignore` ⭐ NEW
 - [x] `acceptance-tests/automation/playwright.config.ts`
 - [x] `acceptance-tests/automation/pages/BasePage.ts`
@@ -20,6 +21,7 @@
 - [x] `acceptance-tests/automation/QUICK-START.md`
 
 ### Application Code (Bug Fixes):
+
 - [x] `contexts/AuthContext.tsx` - Removed toast errors for inline display
 - [x] `app/signin/page.tsx` - Added formatAuthError() helper
 - [x] `app/signup/page.tsx` - Enhanced validation & error messages
@@ -34,9 +36,11 @@
 - [x] `app/ClientLayout.tsx` - Added CurrencyProvider
 
 ### Tests:
+
 - [x] `__tests__/currency.test.ts` - 35 unit tests for currency conversion
 
 ### Documentation:
+
 - [x] Various acceptance test files (updated)
 
 ---
@@ -44,6 +48,7 @@
 ## ❌ Files NOT to Commit (Excluded by .gitignore)
 
 ### Test Results:
+
 - ❌ `test-results/` - Test execution results
 - ❌ `playwright-report/` - HTML test reports
 - ❌ `*.png` - Screenshots from tests
@@ -59,6 +64,7 @@ These files are automatically ignored and won't show up in `git status`.
 ## 🚀 Suggested Commit Messages
 
 ### Option 1 (Detailed):
+
 ```bash
 git add .
 git commit -m "feat: Complete Phase 1 - Authentication Testing & Critical Bug Fixes
@@ -91,6 +97,7 @@ git commit -m "feat: Complete Phase 1 - Authentication Testing & Critical Bug Fi
 ```
 
 ### Option 2 (Concise):
+
 ```bash
 git add .
 git commit -m "feat: Phase 1 Complete - Auth Testing (37 tests, 100% pass) + 7 Bug Fixes
@@ -106,6 +113,7 @@ git commit -m "feat: Phase 1 Complete - Auth Testing (37 tests, 100% pass) + 7 B
 ```
 
 ### Option 3 (Conventional Commits):
+
 ```bash
 git add .
 git commit -m "feat(testing): implement playwright automation phase 1
@@ -173,6 +181,7 @@ git diff --name-only
 ## ✅ Recommended Action
 
 **Use Option 1 (Detailed)** for comprehensive commit message that documents:
+
 - What was built (automation framework)
 - What was fixed (7 bugs)
 - Test results (37/37 passing)
@@ -185,11 +194,12 @@ This provides excellent project history and makes it easy to track progress.
 **Status**: Ready to commit ✅  
 **Files**: ~30 modified/created  
 **Test Results**: Excluded via .gitignore  
-**Documentation**: Complete  
+**Documentation**: Complete
 
 ---
 
 **Next Steps After Commit**:
+
 1. Push to main branch
 2. Start Day 2: Shopping Cart automation
 3. Continue with 50 more tests
