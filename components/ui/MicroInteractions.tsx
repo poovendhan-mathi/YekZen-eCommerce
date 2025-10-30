@@ -10,6 +10,7 @@ interface InteractiveButtonProps {
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   disabled?: boolean;
+  "aria-label"?: string;
 }
 
 interface FloatingActionButtonProps {
@@ -60,6 +61,7 @@ export const InteractiveButton = ({
   size = "md",
   className = "",
   disabled = false,
+  "aria-label": ariaLabel,
 }: InteractiveButtonProps) => {
   const [isPressed, setIsPressed] = useState(false);
   const scale = useMotionValue(1);
@@ -120,6 +122,7 @@ export const InteractiveButton = ({
       onMouseLeave={handleRelease}
       onClick={onClick}
       disabled={disabled}
+      aria-label={ariaLabel}
     >
       <motion.div
         className="absolute inset-0 bg-white"

@@ -1,7 +1,7 @@
 // Goal: Create products listing page with filtering and search
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import ProductCard from "../../components/cards/ProductCard";
@@ -18,7 +18,7 @@ interface ProductsGridProps {
   searchQuery: string;
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -306,5 +306,23 @@ function ProductsGrid({ category, searchQuery }: ProductsGridProps) {
         ))}
       </motion.div>
     </>
+  );
+}
+
+// Wrap with Suspense for useSearchParams
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading products...</p>
+          </div>
+        </div>
+      }
+    >
+      <ProductsPageContent />
+    </Suspense>
   );
 }

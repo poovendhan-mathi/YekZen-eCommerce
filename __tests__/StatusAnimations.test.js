@@ -15,12 +15,36 @@ import {
 // Mock framer-motion
 jest.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, className, style, animate, initial, exit, ...props }) => (
+    div: ({
+      children,
+      className,
+      style,
+      animate,
+      initial,
+      exit,
+      variants,
+      transition,
+      whileHover,
+      whileTap,
+      ...props
+    }) => (
       <div className={className} style={style} {...props}>
         {children}
       </div>
     ),
-    button: ({ children, className, disabled, onClick, ...props }) => (
+    button: ({
+      children,
+      className,
+      disabled,
+      onClick,
+      whileHover,
+      whileTap,
+      variants,
+      initial,
+      animate,
+      transition,
+      ...props
+    }) => (
       <button
         className={className}
         disabled={disabled}
@@ -37,6 +61,9 @@ jest.mock("framer-motion", () => ({
       viewBox,
       stroke,
       strokeWidth,
+      variants,
+      initial,
+      animate,
       ...props
     }) => (
       <svg
@@ -50,14 +77,41 @@ jest.mock("framer-motion", () => ({
         {children}
       </svg>
     ),
-    path: ({ d, ...props }) => <path d={d} {...props} />,
-    circle: ({ cx, cy, r, ...props }) => (
-      <circle cx={cx} cy={cy} r={r} {...props} />
+    path: ({ d, variants, initial, animate, transition, ...props }) => (
+      <path d={d} {...props} />
     ),
-    line: ({ x1, y1, x2, y2, ...props }) => (
-      <line x1={x1} y1={y1} x2={x2} y2={y2} {...props} />
-    ),
-    span: ({ children, className, ...props }) => (
+    circle: ({
+      cx,
+      cy,
+      r,
+      variants,
+      initial,
+      animate,
+      transition,
+      ...props
+    }) => <circle cx={cx} cy={cy} r={r} {...props} />,
+    line: ({
+      x1,
+      y1,
+      x2,
+      y2,
+      variants,
+      initial,
+      animate,
+      transition,
+      ...props
+    }) => <line x1={x1} y1={y1} x2={x2} y2={y2} {...props} />,
+    span: ({
+      children,
+      className,
+      variants,
+      initial,
+      animate,
+      transition,
+      whileHover,
+      whileTap,
+      ...props
+    }) => (
       <span className={className} {...props}>
         {children}
       </span>
@@ -192,23 +246,23 @@ describe("StatusAnimations - FormFieldAnimation", () => {
 describe("StatusAnimations - LoadingButton", () => {
   describe("Rendering", () => {
     it("should render button with children", () => {
-      render(<LoadingButton isLoading={false}>Submit</LoadingButton>);
+      render(<LoadingButton loading={false}>Submit</LoadingButton>);
       expect(screen.getByRole("button")).toHaveTextContent("Submit");
     });
 
-    it("should show loading spinner when isLoading is true", () => {
-      render(<LoadingButton isLoading={true}>Submit</LoadingButton>);
+    it("should show loading spinner when loading is true", () => {
+      render(<LoadingButton loading={true}>Submit</LoadingButton>);
       const button = screen.getByRole("button");
       expect(button).toBeInTheDocument();
     });
 
     it("should disable button when loading", () => {
-      render(<LoadingButton isLoading={true}>Submit</LoadingButton>);
+      render(<LoadingButton loading={true}>Submit</LoadingButton>);
       expect(screen.getByRole("button")).toBeDisabled();
     });
 
     it("should not disable button when not loading", () => {
-      render(<LoadingButton isLoading={false}>Submit</LoadingButton>);
+      render(<LoadingButton loading={false}>Submit</LoadingButton>);
       expect(screen.getByRole("button")).not.toBeDisabled();
     });
   });
@@ -217,7 +271,7 @@ describe("StatusAnimations - LoadingButton", () => {
     it("should handle click events when not loading", () => {
       const handleClick = jest.fn();
       render(
-        <LoadingButton isLoading={false} onClick={handleClick}>
+        <LoadingButton loading={false} onClick={handleClick}>
           Click
         </LoadingButton>
       );
@@ -229,27 +283,28 @@ describe("StatusAnimations - LoadingButton", () => {
     it("should not trigger click when loading", () => {
       const handleClick = jest.fn();
       render(
-        <LoadingButton isLoading={true} onClick={handleClick}>
+        <LoadingButton loading={true} onClick={handleClick}>
           Click
         </LoadingButton>
       );
 
-      // Button is disabled, click should not trigger
       const button = screen.getByRole("button");
       expect(button).toBeDisabled();
+      fireEvent.click(button);
+      expect(handleClick).not.toHaveBeenCalled();
     });
   });
 
   describe("Type Attribute", () => {
     it("should default to submit type", () => {
-      render(<LoadingButton isLoading={false}>Submit</LoadingButton>);
+      render(<LoadingButton loading={false}>Submit</LoadingButton>);
       const button = screen.getByRole("button");
       expect(button).toHaveAttribute("type", "submit");
     });
 
     it("should support custom type", () => {
       render(
-        <LoadingButton isLoading={false} type="button">
+        <LoadingButton loading={false} type="button">
           Button
         </LoadingButton>
       );
@@ -260,13 +315,13 @@ describe("StatusAnimations - LoadingButton", () => {
 
   describe("Accessibility", () => {
     it("should have proper button role", () => {
-      render(<LoadingButton isLoading={false}>Submit</LoadingButton>);
+      render(<LoadingButton loading={false}>Submit</LoadingButton>);
       expect(screen.getByRole("button")).toBeInTheDocument();
     });
 
     it("should support aria-label", () => {
       render(
-        <LoadingButton isLoading={false} aria-label="Submit form">
+        <LoadingButton loading={false} aria-label="Submit form">
           Submit
         </LoadingButton>
       );
@@ -277,7 +332,7 @@ describe("StatusAnimations - LoadingButton", () => {
     });
 
     it("should indicate loading state to screen readers", () => {
-      render(<LoadingButton isLoading={true}>Submit</LoadingButton>);
+      render(<LoadingButton loading={true}>Submit</LoadingButton>);
       const button = screen.getByRole("button");
       expect(button).toHaveAttribute("disabled");
     });

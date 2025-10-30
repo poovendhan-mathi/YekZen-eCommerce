@@ -279,11 +279,9 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           </div>
 
           {/* Product Name */}
-          <Link href={`/product/${product.id}`}>
-            <h3 className="font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors line-clamp-2">
-              {product.name}
-            </h3>
-          </Link>
+          <h3 className="font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors line-clamp-2">
+            {product.name}
+          </h3>
 
           {/* Rating */}
           <div className="flex items-center mb-3">
@@ -292,7 +290,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                 <StarIcon
                   key={i}
                   className={`h-4 w-4 ${
-                    i < Math.floor(product.rating)
+                    i < Math.floor(product.rating || 0)
                       ? "text-yellow-400 fill-current"
                       : "text-gray-300"
                   }`}
@@ -300,7 +298,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               ))}
             </div>
             <span className="text-sm text-gray-600 ml-2">
-              {product.rating} ({product.reviews})
+              {product.rating || 0} ({product.reviews || 0})
             </span>
           </div>
 

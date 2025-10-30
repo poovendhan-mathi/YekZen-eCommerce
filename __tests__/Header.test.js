@@ -4,9 +4,17 @@ import Header from "../components/layout/Header";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 
+// Mock window.scrollTo
+global.scrollTo = jest.fn();
+
 // Mock dependencies
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
+}));
+
+jest.mock("next/image", () => ({
+  __esModule: true,
+  default: ({ src, alt, ...props }) => <img src={src} alt={alt} {...props} />,
 }));
 
 jest.mock("../contexts/AuthContext", () => ({
@@ -186,16 +194,26 @@ describe("Header Component", () => {
 
     it("should show cart item count", () => {
       useCart.mockReturnValue({
-        cart: {
-          items: [
-            { id: 1, quantity: 2 },
-            { id: 2, quantity: 3 },
-          ],
-        },
+        items: [
+          { id: 1, quantity: 2 },
+          { id: 2, quantity: 3 },
+        ],
+        getItemCount: jest.fn(() => 2), // Two unique items
+        addToCart: jest.fn(),
+        removeFromCart: jest.fn(),
+        updateQuantity: jest.fn(),
+        clearCart: jest.fn(),
+        getSubtotal: jest.fn(() => 0),
+        getTax: jest.fn(() => 0),
+        getShipping: jest.fn(() => 0),
+        getTotal: jest.fn(() => 0),
+        isInCart: jest.fn(() => false),
+        getItemQuantity: jest.fn(() => 0),
       });
 
       render(<Header />);
-      expect(screen.getByText("5")).toBeInTheDocument();
+      // Should show 2 (number of unique items), not 5 (total quantity)
+      expect(screen.getByText("2")).toBeInTheDocument();
     });
   });
 

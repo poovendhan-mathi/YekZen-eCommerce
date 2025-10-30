@@ -1,7 +1,7 @@
 // Goal: Payment success page with detailed invoice, GST/tax breakdown, and print functionality
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import {
@@ -43,7 +43,7 @@ interface OrderDetails {
   orderDate: string;
 }
 
-const PaymentSuccessPage = () => {
+const PaymentSuccessContent = () => {
   const searchParams = useSearchParams();
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,26 +66,26 @@ const PaymentSuccessPage = () => {
 
           if (result.success && result.order) {
             const order = result.order;
-            
+
             // Determine currency based on payment method
             const paymentCurrency = method === "stripe" ? "USD" : "INR";
-            
+
             // Calculate subtotal from items
             const itemsSubtotal = order.items.reduce(
               (sum: number, item: any) => sum + item.price * item.quantity,
               0
             );
-            
+
             // Calculate taxes and fees (realistic breakdown)
             const gstRate = paymentCurrency === "INR" ? 0.18 : 0; // 18% GST for India
             const taxRate = paymentCurrency === "USD" ? 0.08 : 0; // 8% tax for US
             const shippingCost = paymentCurrency === "INR" ? 50 : 5; // Flat shipping
             const discount = 0; // No discount for now
-            
+
             const gst = gstRate * itemsSubtotal;
             const tax = taxRate * itemsSubtotal;
             const total = itemsSubtotal + gst + tax + shippingCost - discount;
-            
+
             setOrderDetails({
               orderId: order.id,
               subtotal: itemsSubtotal,
@@ -198,10 +198,14 @@ const PaymentSuccessPage = () => {
                     INVOICE
                   </h2>
                   <p className="text-gray-600">Order #{orderDetails.orderId}</p>
-                  <p className="text-sm text-gray-500">Date: {orderDetails.orderDate}</p>
+                  <p className="text-sm text-gray-500">
+                    Date: {orderDetails.orderDate}
+                  </p>
                 </div>
                 <div className="text-right">
-                  <h3 className="text-lg font-bold text-gray-900">YekZen eCommerce</h3>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    YekZen eCommerce
+                  </h3>
                   <p className="text-sm text-gray-600">123 Business Street</p>
                   <p className="text-sm text-gray-600">Tech City, TC 12345</p>
                   <p className="text-sm text-gray-600">GST: 29ABCDE1234F1Z5</p>
@@ -212,12 +216,19 @@ const PaymentSuccessPage = () => {
             {/* Bill To */}
             <div className="mb-6">
               <h3 className="font-semibold text-gray-900 mb-3">Bill To:</h3>
-              <p className="text-gray-700 font-medium">{orderDetails.shippingAddress.name}</p>
-              <p className="text-gray-600">{orderDetails.shippingAddress.address}</p>
-              <p className="text-gray-600">
-                {orderDetails.shippingAddress.city} {orderDetails.shippingAddress.postalCode}
+              <p className="text-gray-700 font-medium">
+                {orderDetails.shippingAddress.name}
               </p>
-              <p className="text-gray-600">{orderDetails.shippingAddress.country}</p>
+              <p className="text-gray-600">
+                {orderDetails.shippingAddress.address}
+              </p>
+              <p className="text-gray-600">
+                {orderDetails.shippingAddress.city}{" "}
+                {orderDetails.shippingAddress.postalCode}
+              </p>
+              <p className="text-gray-600">
+                {orderDetails.shippingAddress.country}
+              </p>
             </div>
 
             {/* Items Table */}
@@ -269,10 +280,13 @@ const PaymentSuccessPage = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal:</span>
                   <span className="font-medium text-gray-900">
-                    {formatCurrency(orderDetails.subtotal, orderDetails.currency)}
+                    {formatCurrency(
+                      orderDetails.subtotal,
+                      orderDetails.currency
+                    )}
                   </span>
                 </div>
-                
+
                 {orderDetails.gst > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">GST (18%):</span>
@@ -281,7 +295,7 @@ const PaymentSuccessPage = () => {
                     </span>
                   </div>
                 )}
-                
+
                 {orderDetails.tax > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Tax (8%):</span>
@@ -290,35 +304,44 @@ const PaymentSuccessPage = () => {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping:</span>
                   <span className="font-medium text-gray-900">
-                    {formatCurrency(orderDetails.shipping, orderDetails.currency)}
+                    {formatCurrency(
+                      orderDetails.shipping,
+                      orderDetails.currency
+                    )}
                   </span>
                 </div>
-                
+
                 {orderDetails.discount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Discount:</span>
                     <span className="font-medium">
-                      -{formatCurrency(orderDetails.discount, orderDetails.currency)}
+                      -
+                      {formatCurrency(
+                        orderDetails.discount,
+                        orderDetails.currency
+                      )}
                     </span>
                   </div>
                 )}
-                
+
                 <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-3">
                   <span className="text-gray-900">Total Amount:</span>
                   <span className="text-gray-900">
                     {formatCurrency(orderDetails.total, orderDetails.currency)}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between text-sm bg-green-50 p-3 rounded-lg">
-                  <span className="text-green-800 font-medium">Payment Status:</span>
+                  <span className="text-green-800 font-medium">
+                    Payment Status:
+                  </span>
                   <span className="text-green-800 font-bold">PAID</span>
                 </div>
-                
+
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Payment Method:</span>
                   <span className="font-medium text-gray-900">
@@ -332,8 +355,12 @@ const PaymentSuccessPage = () => {
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Estimated Delivery</h3>
-                  <p className="text-gray-600">{orderDetails.estimatedDelivery}</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">
+                    Estimated Delivery
+                  </h3>
+                  <p className="text-gray-600">
+                    {orderDetails.estimatedDelivery}
+                  </p>
                 </div>
                 <DocumentTextIcon className="w-12 h-12 text-gray-300" />
               </div>
@@ -390,6 +417,24 @@ const PaymentSuccessPage = () => {
         </motion.div>
       </div>
     </div>
+  );
+};
+
+// Wrap with Suspense for useSearchParams
+const PaymentSuccessPage = () => {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading order details...</p>
+          </div>
+        </div>
+      }
+    >
+      <PaymentSuccessContent />
+    </Suspense>
   );
 };
 

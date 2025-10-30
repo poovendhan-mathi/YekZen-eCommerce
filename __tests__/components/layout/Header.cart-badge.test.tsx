@@ -6,14 +6,81 @@
  * Bug Fix #1: Cart badge should show number of unique items, not total quantity
  */
 
-import { describe, it, expect, jest } from "@jest/globals";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import React, { createContext } from "react";
+import React from "react";
 
-// Create mock contexts
-const AuthContext = createContext<any>(null);
-const CartContext = createContext<any>(null);
+// Mock Firebase config FIRST before any other imports
+jest.mock("../../../firebase/config", () => ({
+  __esModule: true,
+  auth: {
+    currentUser: null,
+    onAuthStateChanged: jest.fn((callback) => {
+      callback(null);
+      return jest.fn();
+    }),
+  },
+  db: {},
+  app: {},
+}));
+
+// Mock Firebase BEFORE any imports
+jest.mock("firebase/app", () => ({
+  initializeApp: jest.fn(() => ({})),
+  getApps: jest.fn(() => []),
+  getApp: jest.fn(() => ({})),
+}));
+
+jest.mock("firebase/auth", () => ({
+  getAuth: jest.fn(() => ({
+    currentUser: null,
+  })),
+  onAuthStateChanged: jest.fn((auth, callback) => {
+    callback(null);
+    return jest.fn();
+  }),
+  onIdTokenChanged: jest.fn((auth, callback) => {
+    callback(null);
+    return jest.fn();
+  }),
+  signInWithEmailAndPassword: jest.fn(),
+  createUserWithEmailAndPassword: jest.fn(),
+  signOut: jest.fn(),
+  updateProfile: jest.fn(),
+  sendPasswordResetEmail: jest.fn(),
+  signInWithPopup: jest.fn(),
+  GoogleAuthProvider: jest.fn(),
+  FacebookAuthProvider: jest.fn(),
+}));
+
+jest.mock("firebase/firestore", () => ({
+  getFirestore: jest.fn(() => ({})),
+  collection: jest.fn(),
+  doc: jest.fn(),
+  getDoc: jest.fn(),
+  getDocs: jest.fn(),
+  setDoc: jest.fn(),
+  updateDoc: jest.fn(),
+  deleteDoc: jest.fn(),
+  query: jest.fn(),
+  where: jest.fn(),
+  orderBy: jest.fn(),
+  limit: jest.fn(),
+  onSnapshot: jest.fn(),
+  connectFirestoreEmulator: jest.fn(),
+}));
+
+// Mock Next.js Image
+jest.mock("next/image", () => ({
+  __esModule: true,
+  default: ({ src, alt, ...props }: any) => (
+    <img src={src} alt={alt} {...props} />
+  ),
+}));
+
+// Mock window.scrollTo
+global.scrollTo = jest.fn();
 
 // Mock Next.js navigation
 jest.mock("next/navigation", () => ({
@@ -25,20 +92,60 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/test",
 }));
 
-// Import Header component
+// Mock Next.js Link
+jest.mock("next/link", () => {
+  return function MockedLink({ children, href, ...props }: any) {
+    return (
+      <a href={href} {...props}>
+        {children}
+      </a>
+    );
+  };
+});
+
+// Mock framer-motion
+jest.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, ...props }: any) => {
+      const {
+        initial,
+        animate,
+        variants,
+        whileHover,
+        transition,
+        ...cleanProps
+      } = props;
+      return <div {...cleanProps}>{children}</div>;
+    },
+    button: ({ children, ...props }: any) => {
+      const { whileHover, whileTap, transition, ...cleanProps } = props;
+      return <button {...cleanProps}>{children}</button>;
+    },
+    span: ({ children, ...props }: any) => {
+      const { whileHover, initial, animate, ...cleanProps } = props;
+      return <span {...cleanProps}>{children}</span>;
+    },
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+}));
+
+// Import contexts and Header component
+import AuthContext from "../../../contexts/AuthContext";
+import CartContext from "../../../contexts/CartContext";
 import Header from "../../../components/layout/Header";
 
 describe("Header Component", () => {
   const mockAuthValue = {
     user: null,
     loading: false,
-    signIn: jest.fn(),
+    login: jest.fn(),
     signUp: jest.fn(),
-    signOut: jest.fn(),
+    logout: jest.fn(),
+    googleSignIn: jest.fn(),
   };
 
   describe("Cart Badge Display", () => {
-    it("should display correct number of unique items in cart badge", async () => {
+    it("should display correct number of unique items in cart badge", () => {
       // Arrange: Cart with 2 unique items (quantities: 2 and 2 = total 4)
       const mockCartValue = {
         items: [
@@ -57,12 +164,17 @@ describe("Header Component", () => {
             image: "/img2.jpg",
           },
         ],
-        total: 499.96,
-        addItem: jest.fn(),
-        removeItem: jest.fn(),
+        addToCart: jest.fn(),
+        removeFromCart: jest.fn(),
         updateQuantity: jest.fn(),
         clearCart: jest.fn(),
         getItemCount: jest.fn(() => 2), // Returns unique items count
+        getSubtotal: jest.fn(() => 499.96),
+        getTax: jest.fn(() => 40),
+        getShipping: jest.fn(() => 0),
+        getTotal: jest.fn(() => 539.96),
+        isInCart: jest.fn(() => false),
+        getItemQuantity: jest.fn(() => 0),
       };
 
       // Act
@@ -75,21 +187,24 @@ describe("Header Component", () => {
       );
 
       // Assert: Should show "2" (unique items), NOT "4" (total quantity)
-      await waitFor(() => {
-        const badge = screen.getByText("2");
-        expect(badge).toBeTruthy();
-      });
+      const badge = screen.getByText("2");
+      expect(badge).toBeInTheDocument();
     });
 
     it("should not display badge when cart is empty", () => {
       const mockCartValue = {
         items: [],
-        total: 0,
-        addItem: jest.fn(),
-        removeItem: jest.fn(),
+        addToCart: jest.fn(),
+        removeFromCart: jest.fn(),
         updateQuantity: jest.fn(),
         clearCart: jest.fn(),
         getItemCount: jest.fn(() => 0),
+        getSubtotal: jest.fn(() => 0),
+        getTax: jest.fn(() => 0),
+        getShipping: jest.fn(() => 0),
+        getTotal: jest.fn(() => 0),
+        isInCart: jest.fn(() => false),
+        getItemQuantity: jest.fn(() => 0),
       };
 
       render(

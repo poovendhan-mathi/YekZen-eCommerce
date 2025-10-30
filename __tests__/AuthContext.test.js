@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  onIdTokenChanged,
 } from "firebase/auth";
 import toast from "react-hot-toast";
 
@@ -14,6 +15,7 @@ jest.mock("firebase/auth", () => ({
   createUserWithEmailAndPassword: jest.fn(),
   signOut: jest.fn(),
   onAuthStateChanged: jest.fn(),
+  onIdTokenChanged: jest.fn(),
   updateProfile: jest.fn(),
   sendPasswordResetEmail: jest.fn(),
   signInWithPopup: jest.fn(),
@@ -31,6 +33,10 @@ describe("AuthContext", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     onAuthStateChanged.mockImplementation((auth, callback) => {
+      callback(null);
+      return jest.fn();
+    });
+    onIdTokenChanged.mockImplementation((auth, callback) => {
       callback(null);
       return jest.fn();
     });

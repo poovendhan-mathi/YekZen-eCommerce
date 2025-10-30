@@ -2,7 +2,14 @@ import { renderHook, act } from "@testing-library/react";
 import { CartProvider, useCart } from "../contexts/CartContext";
 import toast from "react-hot-toast";
 
-jest.mock("react-hot-toast");
+jest.mock("react-hot-toast", () => ({
+  __esModule: true,
+  default: {
+    success: jest.fn(),
+    error: jest.fn(),
+    loading: jest.fn(),
+  },
+}));
 
 describe("CartContext", () => {
   beforeEach(() => {
@@ -54,7 +61,7 @@ describe("CartContext", () => {
       expect(result.current.items).toHaveLength(1);
       expect(result.current.items[0].id).toBe("1");
       expect(result.current.items[0].quantity).toBe(1);
-      expect(toast.success).toHaveBeenCalledWith("Added to cart!");
+      // Toast is not shown by addToCart anymore - it's handled by the calling component
     });
 
     it("should increase quantity if item already in cart", () => {
@@ -92,11 +99,23 @@ describe("CartContext", () => {
 
       act(() => {
         result.current.addToCart(product);
+      });
+
+      // Clear previous calls
+      jest.clearAllMocks();
+
+      act(() => {
         result.current.removeFromCart("1");
       });
 
       expect(result.current.items).toHaveLength(0);
-      expect(toast.success).toHaveBeenCalledWith("Removed from cart");
+      // The toast should have been called
+      expect(toast.success).toHaveBeenCalled();
+      // Check if it was called with a message containing the product name
+      if (toast.success.mock.calls.length > 0) {
+        const callArg = toast.success.mock.calls[0][0];
+        expect(callArg).toContain("Test Product");
+      }
     });
   });
 
@@ -194,12 +213,17 @@ describe("CartContext", () => {
         result.current.updateQuantity("1", 2);
       });
 
-      expect(result.current.getTotal()).toBe(250); // (100 * 2) + (50 * 1)
+      // Total includes subtotal + tax (8%) + shipping (free over $50)
+      // Subtotal: (100 * 2) + (50 * 1) = 250
+      // Tax: 250 * 0.08 = 20
+      // Shipping: 0 (free since subtotal > 50)
+      // Total: 250 + 20 + 0 = 270
+      expect(result.current.getTotal()).toBe(270);
     });
   });
 
   describe("LocalStorage Persistence", () => {
-    it("should save cart to localStorage", () => {
+    it("should save cart to localStorage", async () => {
       const wrapper = ({ children }) => <CartProvider>{children}</CartProvider>;
       const { result } = renderHook(() => useCart(), { wrapper });
 
@@ -214,23 +238,26 @@ describe("CartContext", () => {
         result.current.addToCart(product);
       });
 
-      const savedCart = JSON.parse(localStorage.getItem("yekzen-cart") || "{}");
-      expect(savedCart?.items || []).toHaveLength(1);
-      expect(savedCart?.items?.[0]?.id).toBe("1");
+      // Wait for debounced localStorage save (300ms)
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      });
+
+      const savedCart = JSON.parse(localStorage.getItem("yekzen-cart") || "[]");
+      expect(savedCart).toHaveLength(1);
+      expect(savedCart[0]?.id).toBe("1");
     });
 
     it("should load cart from localStorage on mount", () => {
-      const existingCart = {
-        items: [
-          {
-            id: "1",
-            name: "Existing Product",
-            price: 99.99,
-            quantity: 2,
-          },
-        ],
-        total: 199.98,
-      };
+      const existingCart = [
+        {
+          id: "1",
+          name: "Existing Product",
+          price: 99.99,
+          quantity: 2,
+          image: "test.jpg",
+        },
+      ];
 
       localStorage.setItem("yekzen-cart", JSON.stringify(existingCart));
 

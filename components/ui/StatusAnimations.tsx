@@ -525,10 +525,16 @@ export const LoadingButton = ({
   loading = false,
   children,
   className = "",
+  type = "submit",
   ...props
 }: LoadingButtonProps) => {
   return (
-    <button className={`relative ${className}`} disabled={loading} {...props}>
+    <button
+      className={`relative ${className}`}
+      type={type}
+      disabled={loading}
+      {...props}
+    >
       <AnimatePresence mode="wait">
         {loading ? (
           <motion.div

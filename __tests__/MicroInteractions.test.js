@@ -20,6 +20,12 @@ jest.mock("framer-motion", () => ({
       style,
       onMouseMove,
       onMouseLeave,
+      whileHover,
+      whileTap,
+      variants,
+      initial,
+      animate,
+      transition,
       ...props
     }) => (
       <button
@@ -33,7 +39,19 @@ jest.mock("framer-motion", () => ({
         {children}
       </button>
     ),
-    div: ({ children, className, onHoverStart, onHoverEnd, ...props }) => (
+    div: ({
+      children,
+      className,
+      onHoverStart,
+      onHoverEnd,
+      whileHover,
+      whileTap,
+      variants,
+      initial,
+      animate,
+      transition,
+      ...props
+    }) => (
       <div
         className={className}
         onMouseEnter={onHoverStart}
@@ -43,7 +61,17 @@ jest.mock("framer-motion", () => ({
         {children}
       </div>
     ),
-    span: ({ children, className, ...props }) => (
+    span: ({
+      children,
+      className,
+      whileHover,
+      whileTap,
+      variants,
+      initial,
+      animate,
+      transition,
+      ...props
+    }) => (
       <span className={className} {...props}>
         {children}
       </span>
@@ -255,7 +283,7 @@ describe("MicroInteractions - InteractiveCard", () => {
           <p>Content</p>
         </InteractiveCard>
       );
-      const card = screen.getByText("Content").parentElement;
+      const card = screen.getByText("Content").parentElement?.parentElement;
       expect(card).toHaveClass("custom-card");
     });
 
@@ -265,7 +293,7 @@ describe("MicroInteractions - InteractiveCard", () => {
           <p>Content</p>
         </InteractiveCard>
       );
-      const card = screen.getByText("Content").parentElement;
+      const card = screen.getByText("Content").parentElement?.parentElement;
       expect(card?.className).toContain("bg-white");
       expect(card?.className).toContain("rounded-xl");
     });
