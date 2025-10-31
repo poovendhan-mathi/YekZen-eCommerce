@@ -3,9 +3,15 @@ import { useRouter } from "next/navigation";
 import Header from "../components/layout/Header";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
+import { CurrencyProvider } from "../contexts/CurrencyContext";
 
 // Mock window.scrollTo
 global.scrollTo = jest.fn();
+
+// Helper function to render with providers
+const renderWithProviders = (component) => {
+  return render(<CurrencyProvider>{component}</CurrencyProvider>);
+};
 
 // Mock dependencies
 jest.mock("next/navigation", () => ({
@@ -43,12 +49,12 @@ describe("Header Component", () => {
 
   describe("Rendering", () => {
     it("should render the logo", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       expect(screen.getByText("YekZen")).toBeInTheDocument();
     });
 
     it("should render navigation links", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       expect(screen.getByText("Home")).toBeInTheDocument();
       expect(screen.getByText("Products")).toBeInTheDocument();
       expect(screen.getByText("Categories")).toBeInTheDocument();
@@ -57,13 +63,13 @@ describe("Header Component", () => {
     });
 
     it("should render search bar", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       const searchInput = screen.getByPlaceholderText(/search for products/i);
       expect(searchInput).toBeInTheDocument();
     });
 
     it("should render cart icon", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       const cartLinks = screen.getAllByRole("link");
       const cartLink = cartLinks.find(
         (link) => link.getAttribute("href") === "/cart"
@@ -74,7 +80,7 @@ describe("Header Component", () => {
 
   describe("Authentication", () => {
     it("should show Sign In and Sign Up buttons when not authenticated", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       expect(screen.getAllByText("Sign In")[0]).toBeInTheDocument();
       expect(screen.getAllByText("Sign Up")[0]).toBeInTheDocument();
     });
@@ -88,7 +94,7 @@ describe("Header Component", () => {
         signOut: mockSignOut,
       });
 
-      render(<Header />);
+      renderWithProviders(<Header />);
       expect(screen.getByText("Test User")).toBeInTheDocument();
     });
 
@@ -101,7 +107,7 @@ describe("Header Component", () => {
         signOut: mockSignOut,
       });
 
-      render(<Header />);
+      renderWithProviders(<Header />);
       expect(screen.getByText("Admin")).toBeInTheDocument();
     });
 
@@ -114,7 +120,7 @@ describe("Header Component", () => {
         signOut: mockSignOut,
       });
 
-      render(<Header />);
+      renderWithProviders(<Header />);
       const profileButton = screen.getByText("Test User").closest("button");
       fireEvent.click(profileButton);
 
@@ -133,7 +139,7 @@ describe("Header Component", () => {
         signOut: mockSignOut,
       });
 
-      render(<Header />);
+      renderWithProviders(<Header />);
       const profileButton = screen.getByText("Admin User").closest("button");
       fireEvent.click(profileButton);
 
@@ -146,7 +152,7 @@ describe("Header Component", () => {
 
   describe("Search Functionality", () => {
     it("should update search query on input change", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       const searchInput = screen.getByPlaceholderText(/search for products/i);
 
       fireEvent.change(searchInput, { target: { value: "test query" } });
@@ -154,7 +160,7 @@ describe("Header Component", () => {
     });
 
     it("should navigate to products page on search submit", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       const searchInput = screen.getByPlaceholderText(/search for products/i);
       const searchForm = searchInput.closest("form");
 
@@ -165,7 +171,7 @@ describe("Header Component", () => {
     });
 
     it("should clear search query after submit", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       const searchInput = screen.getByPlaceholderText(/search for products/i);
       const searchForm = searchInput.closest("form");
 
@@ -176,7 +182,7 @@ describe("Header Component", () => {
     });
 
     it("should not submit empty search", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       const searchInput = screen.getByPlaceholderText(/search for products/i);
       const searchForm = searchInput.closest("form");
 
@@ -188,7 +194,7 @@ describe("Header Component", () => {
 
   describe("Cart Badge", () => {
     it("should not show cart badge when cart is empty", () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       expect(screen.queryByText("0")).not.toBeInTheDocument();
     });
 
@@ -211,7 +217,7 @@ describe("Header Component", () => {
         getItemQuantity: jest.fn(() => 0),
       });
 
-      render(<Header />);
+      renderWithProviders(<Header />);
       // Should show 2 (number of unique items), not 5 (total quantity)
       expect(screen.getByText("2")).toBeInTheDocument();
     });
@@ -219,7 +225,7 @@ describe("Header Component", () => {
 
   describe("Mobile Menu", () => {
     it("should toggle mobile menu on button click", async () => {
-      render(<Header />);
+      renderWithProviders(<Header />);
       const menuButton = screen.getByLabelText("Toggle menu");
 
       fireEvent.click(menuButton);
@@ -242,7 +248,7 @@ describe("Header Component", () => {
         signOut: mockSignOut,
       });
 
-      render(<Header />);
+      renderWithProviders(<Header />);
       const profileButton = screen.getByText("Test User").closest("button");
       fireEvent.click(profileButton);
 

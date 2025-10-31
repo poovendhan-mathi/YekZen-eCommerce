@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlobeAltIcon } from "@heroicons/react/24/outline";
 import { CURRENCIES } from "../../lib/utils/currency";
@@ -33,6 +34,7 @@ const COUNTRIES: Country[] = [
  * - Shipping options
  *
  * Performance: No page reload needed - uses React Context for instant updates
+ * Note: Disabled on checkout page to prevent pricing calculation issues
  */
 export default function RegionSelector() {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -41,6 +43,10 @@ export default function RegionSelector() {
   ); // Default to Singapore
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { currency, setCurrency } = useCurrency();
+  const pathname = usePathname();
+
+  // Check if we're on the checkout page
+  const isCheckoutPage = pathname === "/checkout";
 
   // Initialize from currency context
   useEffect(() => {
@@ -80,9 +86,19 @@ export default function RegionSelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         id="region-selector-button"
-        onClick={() => setShowDropdown(!showDropdown)}
-        className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+        onClick={() => !isCheckoutPage && setShowDropdown(!showDropdown)}
+        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+          isCheckoutPage
+            ? "cursor-not-allowed opacity-50"
+            : "hover:bg-gray-100 cursor-pointer"
+        }`}
         aria-label="Select region and currency"
+        disabled={isCheckoutPage}
+        title={
+          isCheckoutPage
+            ? "Region selector is disabled during checkout"
+            : "Select region and currency"
+        }
       >
         <GlobeAltIcon className="w-5 h-5 text-gray-600" />
         <span className="text-lg">{selectedCountry.flag}</span>
@@ -92,7 +108,7 @@ export default function RegionSelector() {
       </button>
 
       <AnimatePresence>
-        {showDropdown && (
+        {showDropdown && !isCheckoutPage && (
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}

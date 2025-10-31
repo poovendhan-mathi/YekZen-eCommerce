@@ -10,7 +10,7 @@
  *   npm run setup-test-users
  */
 
-import { initializeApp, cert, ServiceAccount } from "firebase-admin/app";
+import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import * as dotenv from "dotenv";
 
@@ -40,7 +40,7 @@ async function setupTestUsers() {
     console.log("🔧 Setting up test users in Firebase...\n");
 
     // Initialize Firebase Admin (for emulator or production)
-    const useEmulator = process.env.USE_FIREBASE_EMULATOR === "true";
+    const useEmulator = process.env.USE_FIREBASE_EMULATOR !== "false";
 
     if (useEmulator) {
       console.log("📍 Using Firebase Emulator");
@@ -49,12 +49,12 @@ async function setupTestUsers() {
     }
 
     // Initialize app
-    initializeApp({
+    const app = initializeApp({
       projectId:
         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "yekzen-ecommerce",
     });
 
-    const auth = getAuth();
+    const auth = getAuth(app);
 
     // Create each test user
     for (const user of testUsers) {

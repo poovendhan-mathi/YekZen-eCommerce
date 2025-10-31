@@ -139,9 +139,18 @@ export const CartProvider = ({ children }: CartProviderProps) => {
   // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem("yekzen-cart");
+    const cartTimestamp = localStorage.getItem("yekzen-cart-timestamp");
+
     if (savedCart) {
       try {
         const cartData = JSON.parse(savedCart);
+
+        // For guest users, keep cart indefinitely
+        // Cart timestamp is just for analytics, not expiration
+        if (!cartTimestamp) {
+          localStorage.setItem("yekzen-cart-timestamp", Date.now().toString());
+        }
+
         dispatch({ type: CART_ACTIONS.LOAD_CART, payload: cartData });
       } catch (error) {
         console.error("Error loading cart from localStorage:", error);
@@ -153,6 +162,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem("yekzen-cart", JSON.stringify(state.items));
+      localStorage.setItem("yekzen-cart-timestamp", Date.now().toString());
     }, 300); // 300ms debounce
     return () => clearTimeout(timer);
   }, [state.items]);

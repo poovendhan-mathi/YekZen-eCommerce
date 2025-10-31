@@ -8,6 +8,8 @@ This document provides AI assistants (GitHub Copilot, ChatGPT, Claude, etc.) wit
 
 ---
 
+DO NOT CREATE SUMMARY FILES ALL THE TIME
+
 !!! IMPORTANT: HIGH PRIORITY - UI MUST NOT BE CHANGED !!!
 Make absolutely sure to keep the current UI — it is required and must NOT be removed, altered, or refactored without explicit written approval from the YekZen product team. Any UI changes require prior sign-off and review.
 

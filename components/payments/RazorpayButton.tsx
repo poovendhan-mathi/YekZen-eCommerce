@@ -226,6 +226,14 @@ const RazorpayButton: React.FC<RazorpayButtonProps> = ({
         return;
       }
 
+      // Store guest email for order tracking (if not authenticated)
+      if (
+        customerInfo.email &&
+        !window.location.pathname.includes("/profile")
+      ) {
+        localStorage.setItem("yekzen-guest-email", customerInfo.email);
+      }
+
       toast.success("🎉 Demo Razorpay Payment Successful!");
       localStorage.removeItem("yekzen-cart");
 

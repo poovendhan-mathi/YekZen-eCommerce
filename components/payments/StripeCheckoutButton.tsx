@@ -130,6 +130,11 @@ const StripeCheckoutButton: React.FC<StripeCheckoutButtonProps> = ({
         return;
       }
 
+      // Store guest email for order tracking (if not authenticated)
+      if (customerEmail && !window.location.pathname.includes("/profile")) {
+        localStorage.setItem("yekzen-guest-email", customerEmail);
+      }
+
       toast.success("🎉 Demo Stripe Payment Successful!");
       localStorage.removeItem("yekzen-cart");
 

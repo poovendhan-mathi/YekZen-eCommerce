@@ -78,10 +78,23 @@ export default function OrdersPage() {
   // Fetch real orders from Firebase
   useEffect(() => {
     async function fetchOrders() {
-      if (!user) {
-        toast.error("Please sign in to view your orders");
-        router.push("/signin?returnUrl=" + encodeURIComponent("/orders"));
-        return;
+      // Get email from authenticated user OR guest localStorage
+      let userEmail: string | null = null;
+
+      if (user?.email) {
+        // Authenticated user
+        userEmail = user.email;
+      } else {
+        // Check for guest email in localStorage
+        const guestEmail = localStorage.getItem("yekzen-guest-email");
+        if (guestEmail) {
+          userEmail = guestEmail;
+        } else {
+          // No user and no guest email - redirect to signin
+          toast.error("Please sign in to view your orders");
+          router.push("/signin?returnUrl=" + encodeURIComponent("/orders"));
+          return;
+        }
       }
 
       try {
@@ -90,7 +103,7 @@ export default function OrdersPage() {
           success,
           orders: userOrders,
           error,
-        } = await ordersService.getUserOrders(user.email!);
+        } = await ordersService.getUserOrders(userEmail);
 
         if (!success || !userOrders) {
           toast.error(error || "Failed to load orders");

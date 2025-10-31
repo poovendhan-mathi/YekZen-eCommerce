@@ -18,6 +18,7 @@ const customJestConfig = {
     "<rootDir>/node_modules/",
     "<rootDir>/__tests__/setup.d.ts",
     "<rootDir>/__tests__/components/layout/Header.cart-badge.test.tsx", // Temporarily disabled due to Firebase mock issues
+    "<rootDir>/acceptance-tests/", // Exclude Playwright E2E tests
   ],
 
   // Coverage configuration

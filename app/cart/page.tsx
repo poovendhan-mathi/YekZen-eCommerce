@@ -96,9 +96,13 @@ export default function CartPage() {
 
                 {/* Product Info */}
                 <div className="flex-grow">
-                  <h3 className="font-semibold text-gray-900 mb-1">
-                    {item.name}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                    {/* Quantity Badge */}
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                      {item.quantity}x
+                    </span>
+                  </div>
                   <Price
                     amount={item.price}
                     className="text-blue-600 font-bold"

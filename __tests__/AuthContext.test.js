@@ -106,7 +106,7 @@ describe("AuthContext", () => {
 
       expect(signInResult.success).toBe(false);
       expect(signInResult.error).toBe("Invalid credentials");
-      expect(toast.error).toHaveBeenCalled();
+      // Note: toast.error is no longer called for sign-in errors (handled by page components)
     });
   });
 
@@ -149,7 +149,8 @@ describe("AuthContext", () => {
       });
 
       expect(signUpResult.success).toBe(false);
-      expect(toast.error).toHaveBeenCalled();
+      expect(signUpResult.error).toBe("Email already in use");
+      // Toast.error is no longer called - errors are shown inline
     });
   });
 

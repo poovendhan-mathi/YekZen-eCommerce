@@ -22,7 +22,6 @@ import ReviewModal from "../../../components/ui/ReviewModal";
 import toast from "react-hot-toast";
 import { useCart } from "../../../contexts/CartContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { useCurrency } from "../../../contexts/CurrencyContext";
 
 interface Product {
   id: number;

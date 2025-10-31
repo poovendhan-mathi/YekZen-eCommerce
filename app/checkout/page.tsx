@@ -17,6 +17,18 @@ import RazorpayButton from "../../components/payments/RazorpayButton";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
 import { isIndianUser } from "../../components/layout/RegionSelector";
+import {
+  CountryCode,
+  validateEmail,
+  validatePhone,
+  validatePostalCode,
+  validateName,
+  validateAddress,
+  validateCity,
+  validateCountry,
+  getAllCountries,
+  getCountryInfo,
+} from "../../lib/utils/validation";
 
 // Type definitions
 interface CartItem {
@@ -31,6 +43,7 @@ interface CartItem {
 interface CustomerInfo {
   name: string;
   email: string;
+  phoneCountryCode: string;
   phone: string;
   address: string;
   city: string;
@@ -44,6 +57,7 @@ export default function CheckoutPage() {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: "",
     email: "",
+    phoneCountryCode: "US",
     phone: "",
     address: "",
     city: "",
@@ -116,57 +130,80 @@ export default function CheckoutPage() {
       ...prev,
       [name]: value,
     }));
-    // Mark field as touched
+  };
+
+  const handleBlur = (fieldName: string) => {
     setTouchedFields((prev) => ({
       ...prev,
-      [name]: true,
+      [fieldName]: true,
     }));
   };
 
   // Validate form
   useEffect(() => {
     const errors: Record<string, string> = {};
+    const countryCode = customerInfo.country as CountryCode;
 
-    // Required field validation
-    if (!customerInfo.name.trim()) {
-      errors.name = "Name is required";
+    // Only validate touched fields to avoid showing errors immediately
+    if (touchedFields.name) {
+      const nameError = validateName(customerInfo.name);
+      if (nameError) errors.name = nameError;
     }
 
-    if (!customerInfo.email.trim()) {
-      errors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerInfo.email)) {
-      errors.email = "Please enter a valid email address";
+    if (touchedFields.email) {
+      const emailError = validateEmail(customerInfo.email);
+      if (emailError) errors.email = emailError;
     }
 
-    // Phone validation - relaxed for international numbers with country codes
-    if (!customerInfo.phone.trim()) {
-      errors.phone = "Phone number is required";
-    } else {
-      const phoneDigits = customerInfo.phone.replace(/[^0-9]/g, "");
-      if (phoneDigits.length < 7) {
-        errors.phone = "Please enter a valid phone number";
-      }
+    if (touchedFields.phone) {
+      // Combine country code and phone for validation
+      const fullPhone = `${
+        getCountryInfo(customerInfo.phoneCountryCode as CountryCode).phoneCode
+      } ${customerInfo.phone}`;
+      const phoneError = validatePhone(
+        fullPhone,
+        customerInfo.phoneCountryCode as CountryCode
+      );
+      if (phoneError) errors.phone = phoneError;
     }
 
-    if (!customerInfo.address.trim()) {
-      errors.address = "Address is required";
+    if (touchedFields.address) {
+      const addressError = validateAddress(customerInfo.address);
+      if (addressError) errors.address = addressError;
     }
 
-    if (!customerInfo.city.trim()) {
-      errors.city = "City is required";
+    if (touchedFields.city) {
+      const cityError = validateCity(customerInfo.city);
+      if (cityError) errors.city = cityError;
     }
 
-    if (!customerInfo.postalCode.trim()) {
-      errors.postalCode = "Postal code is required";
+    if (touchedFields.postalCode) {
+      const postalCodeError = validatePostalCode(
+        customerInfo.postalCode,
+        countryCode || "US"
+      );
+      if (postalCodeError) errors.postalCode = postalCodeError;
     }
 
-    if (!customerInfo.country.trim()) {
-      errors.country = "Country is required";
+    if (touchedFields.country) {
+      const countryError = validateCountry(customerInfo.country);
+      if (countryError) errors.country = countryError;
     }
 
     setValidationErrors(errors);
-    setIsFormValid(Object.keys(errors).length === 0);
-  }, [customerInfo]);
+
+    // Form is valid if all fields are filled and no errors exist
+    const allFieldsFilled =
+      customerInfo.name.trim() !== "" &&
+      customerInfo.email.trim() !== "" &&
+      customerInfo.phone.trim() !== "" &&
+      customerInfo.address.trim() !== "" &&
+      customerInfo.city.trim() !== "" &&
+      customerInfo.postalCode.trim() !== "" &&
+      customerInfo.country.trim() !== "";
+
+    setIsFormValid(allFieldsFilled && Object.keys(errors).length === 0);
+  }, [customerInfo, touchedFields]);
 
   if (cartItems.length === 0) {
     return (
@@ -227,6 +264,7 @@ export default function CheckoutPage() {
                     placeholder="Full Name"
                     value={customerInfo.name}
                     onChange={handleInputChange}
+                    onBlur={() => handleBlur("name")}
                     required
                     className={
                       touchedFields.name && validationErrors.name
@@ -247,6 +285,7 @@ export default function CheckoutPage() {
                     placeholder="Email Address"
                     value={customerInfo.email}
                     onChange={handleInputChange}
+                    onBlur={() => handleBlur("email")}
                     required
                     className={
                       touchedFields.email && validationErrors.email
@@ -261,33 +300,63 @@ export default function CheckoutPage() {
                   )}
                 </div>
                 <div className="md:col-span-2">
-                  <Input
-                    name="phone"
-                    placeholder="Phone Number (e.g., +1234567890)"
-                    value={customerInfo.phone}
-                    onChange={(e) => {
-                      // Only allow numbers, +, -, spaces, and parentheses
-                      const value = e.target.value.replace(/[^0-9+\-() ]/g, "");
-                      handleInputChange({
-                        ...e,
-                        target: { ...e.target, name: "phone", value },
-                      });
-                    }}
-                    required
-                    pattern="[\+]?[0-9\-() ]+"
-                    minLength={10}
-                    maxLength={15}
-                    className={
-                      touchedFields.phone && validationErrors.phone
-                        ? "border-red-500"
-                        : ""
-                    }
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number *
+                  </label>
+                  <div className="flex gap-2">
+                    {/* Country Code Selector */}
+                    <select
+                      name="phoneCountryCode"
+                      className="px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                      value={customerInfo.phoneCountryCode}
+                      onChange={handleInputChange}
+                    >
+                      {getAllCountries().map(({ code, phoneCode }) => (
+                        <option key={code} value={code}>
+                          {phoneCode}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Phone Number Input (without country code) */}
+                    <Input
+                      name="phone"
+                      placeholder="1234567890"
+                      value={customerInfo.phone}
+                      onChange={(e) => {
+                        // Only allow numbers, spaces, hyphens, parentheses
+                        const value = e.target.value.replace(
+                          /[^0-9\-() ]/g,
+                          ""
+                        );
+                        handleInputChange({
+                          ...e,
+                          target: { ...e.target, name: "phone", value },
+                        });
+                      }}
+                      onBlur={() => handleBlur("phone")}
+                      required
+                      className={`flex-1 ${
+                        touchedFields.phone && validationErrors.phone
+                          ? "border-red-500"
+                          : ""
+                      }`}
+                    />
+                  </div>
                   {touchedFields.phone && validationErrors.phone && (
                     <p className="text-red-500 text-sm mt-1">
                       {validationErrors.phone}
                     </p>
                   )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Phone number will be sent as:{" "}
+                    {
+                      getCountryInfo(
+                        customerInfo.phoneCountryCode as CountryCode
+                      ).phoneCode
+                    }{" "}
+                    {customerInfo.phone || "XXXXXXXXXX"}
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -313,6 +382,7 @@ export default function CheckoutPage() {
                     placeholder="Street Address"
                     value={customerInfo.address}
                     onChange={handleInputChange}
+                    onBlur={() => handleBlur("address")}
                     required
                     className={
                       touchedFields.address && validationErrors.address
@@ -333,6 +403,7 @@ export default function CheckoutPage() {
                       placeholder="City"
                       value={customerInfo.city}
                       onChange={handleInputChange}
+                      onBlur={() => handleBlur("city")}
                       required
                       className={
                         touchedFields.city && validationErrors.city
@@ -347,12 +418,54 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Postal Code *
+                    </label>
                     <Input
                       name="postalCode"
-                      placeholder="Postal Code"
+                      placeholder={
+                        customerInfo.country
+                          ? getCountryInfo(customerInfo.country as CountryCode)
+                              .postalCodePlaceholder
+                          : "Postal Code"
+                      }
                       value={customerInfo.postalCode}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        let value = e.target.value;
+
+                        // Apply country-specific formatting
+                        if (customerInfo.country) {
+                          const countryInfo = getCountryInfo(
+                            customerInfo.country as CountryCode
+                          );
+
+                          // For numeric-only countries (India, Singapore, etc.), remove non-digits
+                          if (countryInfo.postalCodeType === "numeric") {
+                            value = value.replace(/[^0-9]/g, "");
+                            // Limit to 6 digits for India and Singapore
+                            if (
+                              (customerInfo.country === "IN" ||
+                                customerInfo.country === "SG") &&
+                              value.length > 6
+                            ) {
+                              value = value.slice(0, 6);
+                            }
+                          } else {
+                            // For alphanumeric (UK, Canada), allow letters, numbers, spaces, hyphens
+                            value = value
+                              .replace(/[^a-zA-Z0-9\s-]/g, "")
+                              .toUpperCase();
+                          }
+                        }
+
+                        handleInputChange({
+                          ...e,
+                          target: { ...e.target, name: "postalCode", value },
+                        });
+                      }}
+                      onBlur={() => handleBlur("postalCode")}
                       required
+                      disabled={!customerInfo.country}
                       className={
                         touchedFields.postalCode && validationErrors.postalCode
                           ? "border-red-500"
@@ -368,10 +481,14 @@ export default function CheckoutPage() {
                   </div>
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Country *
+                  </label>
                   <select
                     name="country"
                     value={customerInfo.country}
                     onChange={handleInputChange}
+                    onBlur={() => handleBlur("country")}
                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                       touchedFields.country && validationErrors.country
                         ? "border-red-500"
@@ -380,61 +497,11 @@ export default function CheckoutPage() {
                     required
                   >
                     <option value="">Select Country</option>
-                    <option value="US">United States</option>
-                    <option value="IN">India</option>
-                    <option value="CA">Canada</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="AU">Australia</option>
-                    <option value="DE">Germany</option>
-                    <option value="FR">France</option>
-                    <option value="IT">Italy</option>
-                    <option value="ES">Spain</option>
-                    <option value="JP">Japan</option>
-                    <option value="CN">China</option>
-                    <option value="BR">Brazil</option>
-                    <option value="MX">Mexico</option>
-                    <option value="SG">Singapore</option>
-                    <option value="AE">United Arab Emirates</option>
-                    <option value="SA">Saudi Arabia</option>
-                    <option value="ZA">South Africa</option>
-                    <option value="NZ">New Zealand</option>
-                    <option value="SE">Sweden</option>
-                    <option value="NO">Norway</option>
-                    <option value="DK">Denmark</option>
-                    <option value="FI">Finland</option>
-                    <option value="NL">Netherlands</option>
-                    <option value="BE">Belgium</option>
-                    <option value="CH">Switzerland</option>
-                    <option value="AT">Austria</option>
-                    <option value="PL">Poland</option>
-                    <option value="CZ">Czech Republic</option>
-                    <option value="PT">Portugal</option>
-                    <option value="GR">Greece</option>
-                    <option value="IE">Ireland</option>
-                    <option value="KR">South Korea</option>
-                    <option value="TH">Thailand</option>
-                    <option value="MY">Malaysia</option>
-                    <option value="PH">Philippines</option>
-                    <option value="VN">Vietnam</option>
-                    <option value="ID">Indonesia</option>
-                    <option value="PK">Pakistan</option>
-                    <option value="BD">Bangladesh</option>
-                    <option value="LK">Sri Lanka</option>
-                    <option value="EG">Egypt</option>
-                    <option value="NG">Nigeria</option>
-                    <option value="KE">Kenya</option>
-                    <option value="AR">Argentina</option>
-                    <option value="CL">Chile</option>
-                    <option value="CO">Colombia</option>
-                    <option value="PE">Peru</option>
-                    <option value="TR">Turkey</option>
-                    <option value="IL">Israel</option>
-                    <option value="QA">Qatar</option>
-                    <option value="RU">Russia</option>
-                    <option value="UA">Ukraine</option>
-                    <option value="RO">Romania</option>
-                    <option value="BG">Bulgaria</option>
-                    <option value="HR">Croatia</option>
+                    {getAllCountries().map(({ code, name }) => (
+                      <option key={code} value={code}>
+                        {name}
+                      </option>
+                    ))}
                   </select>
                   {touchedFields.country && validationErrors.country && (
                     <p className="text-red-500 text-sm mt-1">
@@ -514,7 +581,14 @@ export default function CheckoutPage() {
                   ) : (
                     <RazorpayButton
                       items={cartItems}
-                      customerInfo={customerInfo}
+                      customerInfo={{
+                        ...customerInfo,
+                        phone: `${
+                          getCountryInfo(
+                            customerInfo.phoneCountryCode as CountryCode
+                          ).phoneCode
+                        } ${customerInfo.phone}`,
+                      }}
                       amount={totalINR}
                       disabled={!isFormValid}
                     />
@@ -556,11 +630,19 @@ export default function CheckoutPage() {
             <div className="space-y-4 mb-6">
               {cartItems.map((item, index) => (
                 <div key={index} className="flex items-center space-x-4">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
+                  <div className="relative">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    {/* Quantity Badge on Image */}
+                    {item.quantity > 1 && (
+                      <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                        {item.quantity}x
+                      </span>
+                    )}
+                  </div>
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-900">{item.name}</h3>
                     <p className="text-sm text-gray-600">
@@ -576,16 +658,31 @@ export default function CheckoutPage() {
 
             {/* Totals */}
             <div className="border-t pt-4 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+              {/* Detailed Subtotal Breakdown */}
+              <div className="space-y-1 mb-3">
+                <div className="flex justify-between font-medium text-gray-700 mb-2">
+                  <span>Subtotal</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                {cartItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between text-sm text-gray-600 pl-4"
+                  >
+                    <span>
+                      {item.name} × {item.quantity}
+                    </span>
+                    <span>${(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
               </div>
+
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
                 <span>${shipping.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Tax</span>
+                <span className="text-gray-600">Tax (8%)</span>
                 <span>${tax.toFixed(2)}</span>
               </div>
               <div className="border-t pt-2 flex justify-between font-bold text-lg">
