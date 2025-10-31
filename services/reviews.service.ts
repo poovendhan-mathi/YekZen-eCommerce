@@ -4,6 +4,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   query,
   where,
   orderBy,
@@ -22,7 +23,20 @@ interface CreateReviewData {
   rating: number;
   title: string;
   comment: string;
+  images?: string[];
   orderId?: string;
+}
+
+interface ReviewStats {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
 }
 
 export const reviewsService = {
@@ -43,6 +57,37 @@ export const reviewsService = {
         };
       }
 
+      // Validate comment length
+      if (reviewData.comment.trim().length < 10) {
+        return {
+          success: false,
+          error: "Review must be at least 10 characters long",
+        };
+      }
+
+      // Check if user already reviewed this product
+      const existingReview = await this.hasUserReviewed(
+        reviewData.productId,
+        reviewData.userEmail
+      );
+
+      if (existingReview.hasReviewed) {
+        return {
+          success: false,
+          error: "You have already reviewed this product",
+        };
+      }
+
+      // Verify purchase if orderId provided
+      let verified = false;
+      if (reviewData.orderId) {
+        verified = await this.verifyPurchase(
+          reviewData.orderId,
+          reviewData.userId,
+          reviewData.productId
+        );
+      }
+
       // Create review
       const review = {
         productId: reviewData.productId,
@@ -50,19 +95,20 @@ export const reviewsService = {
         userName: reviewData.userName,
         userEmail: reviewData.userEmail,
         rating: reviewData.rating,
-        title: reviewData.title,
-        comment: reviewData.comment,
+        title: reviewData.title.trim(),
+        comment: reviewData.comment.trim(),
+        images: reviewData.images || [],
         orderId: reviewData.orderId || null,
         helpful: 0,
-        verified: !!reviewData.orderId, // Verified if from an order
+        verified,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
       const reviewRef = await addDoc(collection(db, "reviews"), review);
 
-      // Update product's average rating
-      await this.updateProductRating(reviewData.productId);
+      // Update product's average rating and stats
+      await this.updateProductRatingStats(reviewData.productId);
 
       return {
         success: true,
@@ -79,19 +125,41 @@ export const reviewsService = {
   },
 
   /**
-   * Get all reviews for a product
+   * Get all reviews for a product with sorting
    */
-  async getProductReviews(productId: string): Promise<{
+  async getProductReviews(
+    productId: string,
+    sortBy: "recent" | "helpful" | "rating" | "verified" = "recent"
+  ): Promise<{
     success: boolean;
     reviews?: any[];
     error?: string;
   }> {
     try {
-      const reviewsQuery = query(
+      let reviewsQuery = query(
         collection(db, "reviews"),
-        where("productId", "==", productId),
-        orderBy("createdAt", "desc")
+        where("productId", "==", productId)
       );
+
+      // Apply sorting
+      switch (sortBy) {
+        case "recent":
+          reviewsQuery = query(reviewsQuery, orderBy("createdAt", "desc"));
+          break;
+        case "helpful":
+          reviewsQuery = query(reviewsQuery, orderBy("helpful", "desc"));
+          break;
+        case "rating":
+          reviewsQuery = query(reviewsQuery, orderBy("rating", "desc"));
+          break;
+        case "verified":
+          reviewsQuery = query(
+            reviewsQuery,
+            orderBy("verified", "desc"),
+            orderBy("createdAt", "desc")
+          );
+          break;
+      }
 
       const querySnapshot = await getDocs(reviewsQuery);
       const reviews: any[] = [];
@@ -105,6 +173,10 @@ export const reviewsService = {
             data.createdAt instanceof Timestamp
               ? data.createdAt.toDate().toISOString()
               : data.createdAt,
+          updatedAt:
+            data.updatedAt instanceof Timestamp
+              ? data.updatedAt.toDate().toISOString()
+              : data.updatedAt,
         });
       });
 
@@ -239,6 +311,62 @@ export const reviewsService = {
       });
     } catch (error) {
       console.error("Error updating product rating:", error);
+    }
+  },
+
+  /**
+   * Update product rating statistics (comprehensive)
+   */
+  async updateProductRatingStats(productId: string): Promise<void> {
+    try {
+      const stats = await this.getReviewStats(productId);
+
+      if (!stats.success || !stats.stats) {
+        return;
+      }
+
+      // Update product with detailed stats
+      const productRef = doc(db, "products", productId);
+      await updateDoc(productRef, {
+        rating: stats.stats.averageRating,
+        reviewCount: stats.stats.totalReviews,
+        reviews: stats.stats.totalReviews,
+        ratingDistribution: stats.stats.ratingDistribution,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Error updating product rating stats:", error);
+    }
+  },
+
+  /**
+   * Verify if user purchased the product
+   */
+  async verifyPurchase(
+    orderId: string,
+    userId: string,
+    productId: string
+  ): Promise<boolean> {
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      const orderSnap = await getDoc(orderRef);
+
+      if (!orderSnap.exists()) {
+        return false;
+      }
+
+      const orderData = orderSnap.data();
+
+      // Check if order belongs to user and contains the product
+      const belongsToUser = orderData.userId === userId;
+      const containsProduct = orderData.items?.some(
+        (item: any) => item.id === productId || item.productId === productId
+      );
+
+      return belongsToUser && containsProduct;
+    } catch (error) {
+      console.error("Error verifying purchase:", error);
+      return false;
     }
   },
 

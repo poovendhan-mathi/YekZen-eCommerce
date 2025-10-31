@@ -22,6 +22,8 @@
     "setup-instructions": "node scripts/setup-database.js --instructions",
     "seed:local": "node scripts/seedProducts.js",
     "seed:prod": "NEXT_PUBLIC_USE_FIREBASE_EMULATOR=false node scripts/seedProducts.js",
+    "migrate-products": "node scripts/migrate-products.js",
+    "migrate-products:prod": "NEXT_PUBLIC_USE_FIREBASE_EMULATOR=false node scripts/migrate-products.js",
     "docs:generate": "node .github/scripts/generate-docs-local.js all",
     "docs:readme": "node .github/scripts/generate-docs-local.js readme",
     "docs:review": "node .github/scripts/generate-docs-local.js review"

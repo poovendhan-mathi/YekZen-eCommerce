@@ -1,8 +1,9 @@
-// Goal: Setup Firebase App, Firestore, and Auth for YekZen
+// Goal: Setup Firebase App, Firestore, Auth, and Storage for YekZen
 // Supports both production Firebase and local Firebase Emulator
 import { initializeApp } from "firebase/app";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 // Check if we're using Firebase Emulator
 const useEmulator = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true";
@@ -30,6 +31,7 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase services
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 
 // Track if emulator connection has been established (prevent multiple connections)
 let emulatorConnected = false;
@@ -38,6 +40,7 @@ if (useEmulator && typeof window !== "undefined" && !emulatorConnected) {
   const firestorePort =
     process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_PORT || "8080";
   const authPort = process.env.NEXT_PUBLIC_AUTH_EMULATOR_PORT || "9099";
+  const storagePort = process.env.NEXT_PUBLIC_STORAGE_EMULATOR_PORT || "9199";
   const emulatorHost =
     process.env.NEXT_PUBLIC_FIREBASE_EMULATOR_HOST || "localhost";
 
@@ -53,6 +56,12 @@ if (useEmulator && typeof window !== "undefined" && !emulatorConnected) {
       disableWarnings: true,
     });
     console.log(`🔧 Connected to Auth Emulator at ${emulatorHost}:${authPort}`);
+
+    // Connect Storage to emulator
+    connectStorageEmulator(storage, emulatorHost, parseInt(storagePort));
+    console.log(
+      `🔧 Connected to Storage Emulator at ${emulatorHost}:${storagePort}`
+    );
 
     emulatorConnected = true;
   } catch (error) {
